@@ -230,18 +230,17 @@ from graphiti_core.nodes import EpisodeType
 class GraphitiClient(ZepClientAdapter):
     def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_password: str):
         self.graphiti = Graphiti(neo4j_uri, neo4j_user, neo4j_password)
-        import asyncio
-        asyncio.run(self.graphiti.build_indices_and_constraints())
+        _run_async(self.graphiti.build_indices_and_constraints())
 
     def add_episode(self, graph_id: str, data: str) -> str:
-        import asyncio
-        result = asyncio.run(self.graphiti.add_episode(
+        result = _run_async(self.graphiti.add_episode(
             name=f"episode_{graph_id}",
             episode_body=data,
             source=EpisodeType.text,
-            source_description="mirofish_simulation"
+            source_description="mirofish_simulation",
+            group_id=graph_id,  # MiroFish graph_id -> Graphiti group_id
         ))
-        return result.uuid if result else ""
+        return result.episode.uuid if result and result.episode else ""
 
     # ... 其他方法实现
 ```
@@ -250,11 +249,11 @@ class GraphitiClient(ZepClientAdapter):
 
 | 挑战 | 解决方案 |
 |------|----------|
-| 多图谱隔离 | **MVP 必做**：确保 `graph_id` 能隔离数据（优先：写入时带 metadata；备选：按 label/数据库隔离） |
+| 多图谱隔离 | **MVP 必做**：用 `group_id` 隔离数据（MiroFish `graph_id` 直接映射为 Graphiti `group_id`） |
 | 读全量 nodes/edges | **MVP 必做**：允许直接 Cypher 查询 Neo4j，把结果转换成 `GraphNode/GraphEdge` |
 | 搜索结果结构 | **MVP 必做**：把 Graphiti 的返回映射成现有 `SearchResult`，先保证 ReportAgent 可用 |
 | Ontology 映射 | **MVP 先降级**：`set_ontology()` 可 no-op 或仅用于 prompt 提示；Full parity 再做强约束 |
-| 异步/同步适配 | `asyncio.run()` 包装（注意线程/事件循环复用） |
+| 异步/同步适配 | `_run_async()` 复用持久事件循环（避免 `asyncio.run()` 的跨 loop 问题） |
 
 ### 4.4 Phase 4：工厂模式 + 配置（MVP，0.5天）
 
@@ -341,13 +340,19 @@ NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=password
 
-# LLM 配置（Graphiti 实体抽取需要）
+# LLM 配置（MiroFish 统一使用）
 LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL_NAME=qwen3-max
 
-# Graphiti 默认期望的 OpenAI 环境变量（实现时二选一：要么显式传 client，要么做 env 映射）
-OPENAI_API_KEY=your_api_key
-OPENAI_BASE_URL=https://api.openai.com/v1
+# Graphiti 默认读取 OPENAI_*；后端启动时会在未显式设置时自动从 LLM_* 映射
+# （也可以显式设置 OPENAI_* 覆盖）
+# OPENAI_API_KEY=your_api_key
+# OPENAI_BASE_URL=https://api.openai.com/v1
+
+# Graphiti 模型/embeddings（建议显式配置，避免默认 OpenAI 模型名不兼容）
+GRAPHITI_LLM_MODEL=qwen3-max
+GRAPHITI_EMBEDDING_MODEL=text-embedding-v4
 ```
 
 ---
@@ -361,13 +366,17 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 | `backend/app/services/zep_adapter.py` | 抽象接口定义 |
 | `backend/app/services/zep_cloud_impl.py` | Zep Cloud 实现 |
 | `backend/app/services/zep_graphiti_impl.py` | Graphiti 本地实现 |
+| `backend/app/services/graphiti_patch.py` | graphiti-core workaround（Issue #683） |
 | `backend/app/services/zep_factory.py` | 工厂函数 |
 | `docker-compose.local.yml` | Neo4j 本地部署 |
+| `backend/requirements-graphiti.txt` | Graphiti 环境依赖（避免 oasis 冲突） |
 
 ### 5.2 修改文件
 
 | 文件路径 | 修改内容 |
 |----------|----------|
+| `backend/app/api/graph.py` | cloud/graphiti 模式兼容（不强依赖 ZEP_API_KEY） |
+| `backend/app/api/simulation.py` | cloud/graphiti 模式兼容（不强依赖 ZEP_API_KEY） |
 | `backend/app/services/graph_builder.py` | 替换 Zep client |
 | `backend/app/services/zep_tools.py` | 替换 Zep client |
 | `backend/app/services/zep_entity_reader.py` | 替换 Zep client |
@@ -375,7 +384,7 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 | `backend/app/services/oasis_profile_generator.py` | 替换 Zep client |
 | `backend/app/config.py` | 新增配置项 |
 | `.env.example` | 新增配置示例 |
-| `backend/pyproject.toml` | 添加 graphiti-core 依赖 |
+| `backend/pyproject.toml` | graphiti/oasis 设为 optional extras |
 
 ---
 
@@ -398,6 +407,8 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 
 这部分建议拆成可独立 PR 的里程碑：
 
+- 依赖/运行时解耦：解决 `camel-oasis` 与 `graphiti-core` 的 `neo4j` Python driver 版本冲突（见「7.5」）
+- 移除临时 patch：替换/升级到包含修复的 `graphiti-core`，或收敛到可维护的 fork（见「7.6」）
 - Ontology 对齐：把 MiroFish 的 entity_types/edge_types 约束传入 Graphiti（或做后置类型映射）
 - Temporal 字段对齐：补齐 `valid_at/invalid_at/expired_at` 等
 - 搜索质量对齐：混合检索、reranker、分页/过滤等能力补齐
@@ -427,20 +438,20 @@ def create_entity_model(name: str, attributes: Dict[str, type]):
 PersonEntity = create_entity_model('Person', {'name': str, 'age': int})
 ```
 
-> 注：此处仅代表一种思路。更现实的方案是：先在 Graphiti ingestion 层确保 `graph_id` 能贯穿写入与查询；如果做不到，可能需要用“每个 graph 一个数据库/一个 namespace”来隔离。
+> 注：此处仅代表一种思路。更现实的方案是：用 Graphiti 的 `group_id` 做多图谱隔离（MiroFish 的 `graph_id` 直接映射为 `group_id`）；如果做不到，可能需要用“每个 graph 一个数据库/一个 namespace”来隔离。
 
 ### 7.2 多图谱隔离（MVP 中高风险）
 
-**问题**：MiroFish 为每个项目创建独立 `graph_id`，Graphiti 默认单图谱。
+**问题**：MiroFish 为每个项目创建独立 `graph_id`，Graphiti 用 `group_id` 做 partition。
 
-**解决方案**：优先考虑“写入即带 graph_id 元数据”，查询时按 `graph_id` 过滤；必要时使用 label/数据库隔离。
+**解决方案**：优先采用 `group_id` 隔离：把 MiroFish 的 `graph_id` 直接映射为 Graphiti 的 `group_id`，写入/查询都按 `group_id` 过滤；必要时再用 label/数据库隔离。
 
 ```cypher
--- 创建带 graph_id 的节点
-CREATE (n:Entity {graph_id: $graph_id, name: $name})
+-- 创建带 group_id 的节点
+CREATE (n:Entity {group_id: $group_id, name: $name})
 
 -- 查询特定图谱的节点
-MATCH (n:Entity {graph_id: $graph_id}) RETURN n
+MATCH (n:Entity {group_id: $group_id}) RETURN n
 ```
 
 ### 7.3 异步/同步适配（低风险）
@@ -449,14 +460,9 @@ MATCH (n:Entity {graph_id: $graph_id}) RETURN n
 
 **解决方案**：
 
-```python
-import asyncio
-
-def sync_wrapper(async_func):
-    def wrapper(*args, **kwargs):
-        return asyncio.run(async_func(*args, **kwargs))
-    return wrapper
-```
+- 不使用 `asyncio.run()`（它会创建/关闭新 loop，容易触发 Neo4j driver “跨 loop 绑定”问题）
+- 在适配器层提供 `_run_async()`：复用持久 event loop；如遇到 running loop（未来引入 async runtime），用 `nest_asyncio` 或线程 fallback
+- 参考实现：`backend/app/services/zep_graphiti_impl.py` 的 `_run_async()`（已处理上述场景）
 
 ### 7.4 LLM 配置对齐（MVP 中风险）
 
@@ -464,8 +470,11 @@ def sync_wrapper(async_func):
 
 **解决方案**（MVP 建议先走最简单的）：
 
-- 在启动脚本/`.env` 里把 `OPENAI_API_KEY/OPENAI_BASE_URL` 映射到同一个值（见上方 `.env.example` 片段）
-- 或在 `GraphitiClient` 初始化时显式传入 OpenAI-compatible client（优先，避免环境变量散落）
+- 后端启动时自动做 `LLM_* → OPENAI_*` 映射（仅在未显式设置 `OPENAI_*` 时），见 `backend/app/config.py`
+- Graphiti 侧模型名/embedding model 建议显式配置：
+  - `GRAPHITI_LLM_MODEL`（默认回退到 `LLM_MODEL_NAME`）
+  - `GRAPHITI_EMBEDDING_MODEL`
+- DashScope embeddings 的 batch size 上限需要处理（见「7.7」）
 
 #### LLM endpoint 选型（DashScope / OpenAI 都可）
 
@@ -484,7 +493,7 @@ LLM_API_KEY=your_key
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen3-max
 
-# Graphiti（默认期望 OPENAI_*，MVP 先做 env 映射）
+# Graphiti 默认读取 OPENAI_*（后端启动会自动从 LLM_* 映射；也可显式设置覆盖）
 OPENAI_API_KEY=your_key
 OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
@@ -497,6 +506,7 @@ LLM_API_KEY=your_key
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL_NAME=your_chat_model
 
+# Graphiti 默认读取 OPENAI_*（后端启动会自动从 LLM_* 映射；也可显式设置覆盖）
 OPENAI_API_KEY=your_key
 OPENAI_BASE_URL=https://api.openai.com/v1
 ```
@@ -517,6 +527,61 @@ OPENAI_BASE_URL=https://api.openai.com/v1
   - 在 Graphiti backend 里单独接入 DashScope embedding（用 `dashscope.TextEmbedding`）
   - 需要额外配置 `DASHSCOPE_API_KEY`（不要写入仓库，只放本地 `.env`）
 
+### 7.5 依赖冲突（Full parity 阻塞点）
+
+当前项目同时需要：
+
+- `camel-oasis`（仿真引擎）
+- `graphiti-core`（本地图谱）
+
+但两者对 **Python Neo4j driver** 的版本要求存在冲突（已在本地验证）。这会导致 “一套 venv 同时安装两者” 难以成立，从而影响 full parity（完整链路同时启用仿真 + 本地图谱）。
+
+当前已知约束（以项目实际依赖为准）：
+
+- `camel-oasis==0.2.5` 依赖 `neo4j==5.23.0`
+- `graphiti-core>=0.25.0,<0.26.0` 依赖 `neo4j>=5.26.0`
+
+建议的解决路径（按优先级）：
+
+1. **升级/替换 oasis 依赖**：如果上游 `camel-oasis` 可以升级到兼容更新版 `neo4j` driver（或放宽版本约束），这是最干净的方案。
+2. **拆分运行时**：把 Graphiti 相关逻辑拆成独立进程/服务（单独 venv / 单独容器），与主后端通过 HTTP/RPC 交互，避免 Python 依赖冲突。
+3. **选择兼容版本的 graphiti-core**：退回到与 `neo4j==5.23.x` 兼容的 `graphiti-core` 版本，但需要评估功能/bugfix（包括 Issue #683）覆盖情况。
+
+### 7.6 graphiti-core Issue #683（MVP 已绕过；Full parity 需移除）
+
+已确认 `graphiti-core` 存在回归：写入 Neo4j 时尝试保存嵌套 map（Neo4j property 不支持），导致 `add_episode()` 失败，阻塞端到端。
+
+当前 MVP 采用 workaround：在 `backend/app/services/graphiti_patch.py` 对 graphiti-core 的写库路径做 monkey-patch，写入前将嵌套 dict/list 转为 JSON 字符串（sanitize）。
+
+Full parity 需要把这个 workaround 收敛为可维护方案：
+
+- 优先：升级到包含官方修复的 `graphiti-core` 版本并删除 patch
+- 次选：短期维持 patch，但加上版本/签名校验与开关（避免 silently broken）
+- 兜底：维护一个小型 fork（锁定版本 + 自己 backport 修复），确保可复现构建
+
+### 7.7 DashScope embeddings 批量限制（P0：DashScope 下必须处理）
+
+在 DashScope 的 OpenAI-compatible `/embeddings` 接口下，单次请求的 `input` 批量大小存在上限（目前观测为 **<= 10**）。Graphiti 在写入时会对节点/边做 embedding（例如对多条 edge facts 一次性调用 `create_batch()`），当待 embedding 数量超过 10 时会触发：
+
+```
+Error code: 400 - batch size is invalid, it should not be larger than 10
+```
+
+影响：
+
+- 图谱构建可能出现“部分数据已写入，但 embedding 阶段失败导致整体 task failed”的状态（需要清理 `group_id` 后重建以避免脏数据）。
+
+推荐修复（workaround，MVP 可用）：
+
+- 在 Graphiti adapter 注入一个 “batch-limited embedder”：对 `create_batch(input_data_list)` 做分块（每块 <= 10），逐块调用底层 OpenAI-compatible embeddings API，再拼接结果返回。
+- 方案落点：
+  - 推荐：在 `backend/app/services/zep_graphiti_impl.py` 的 `_build_default_embedder()` 外包一层 wrapper
+  - 备选：像 Issue #683 一样做 monkey-patch（patch `graphiti_core.embedder.openai.OpenAIEmbedder.create_batch`）
+
+Full parity 建议：
+
+- 把批量上限收敛成可配置项（例如 `GRAPHITI_EMBEDDING_BATCH_SIZE`），并在文档/启动脚本中明确写出默认值与适用范围。
+
 ---
 
 ## 8. 快速启动
@@ -535,11 +600,16 @@ export ZEP_BACKEND=graphiti
 export NEO4J_URI=bolt://localhost:7687
 export NEO4J_USER=neo4j
 export NEO4J_PASSWORD=password
-export OPENAI_API_KEY="$LLM_API_KEY"
-export OPENAI_BASE_URL="$LLM_BASE_URL"
+# 只需要配置 LLM_*，后端会自动映射到 OPENAI_*
+export LLM_API_KEY=your_key
+export LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+export LLM_MODEL_NAME=qwen3-max
+export GRAPHITI_LLM_MODEL=qwen3-max
+export GRAPHITI_EMBEDDING_MODEL=text-embedding-v4
 
 # 4. 安装依赖
-cd backend && uv sync  # 需要先把 graphiti-core 写入 pyproject.toml
+# 注意：graphiti 与 oasis 目前存在 neo4j driver 冲突，建议分 venv/容器
+cd backend && uv sync --extra graphiti
 
 # 5. 启动服务
 npm run dev

@@ -110,7 +110,7 @@ class SearchResult:
 | `delete_graph()` | `graph.delete()` | Neo4j Cypher 删除 |
 | `add_episode()` | `graph.add()` | `graphiti.add_episode()` |
 | `add_episode_batch()` | 循环 `graph.add()` | 循环 `add_episode()` |
-| `search()` | `graph.search()` | `graphiti.search()` + `_search()` |
+| `search()` | `graph.search()` | 优先 `graphiti.search_()`，fallback `graphiti.search()` |
 | `get_all_nodes()` | `node.get_by_graph_id()` | Neo4j Cypher 查询 |
 | `get_all_edges()` | `edge.get_by_graph_id()` | Neo4j Cypher 查询 |
 | `get_node()` | `node.get()` | Neo4j Cypher 查询 |
@@ -143,22 +143,12 @@ MATCH (n:Entity) WHERE n.group_id = $graph_id RETURN n
 
 Graphiti 使用 async API，MiroFish 业务代码使用同步调用。
 
-**解决方案**：`_run_async()` 辅助方法
+**解决方案**：`_run_async()` 辅助方法（使用持久事件循环，避免 Neo4j driver 绑定到被关闭的 loop）
 
 ```python
 def _run_async(self, coro):
-    """运行异步协程并返回结果"""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        import nest_asyncio
-        nest_asyncio.apply()
-        return asyncio.get_event_loop().run_until_complete(coro)
-    else:
-        return asyncio.run(coro)
+    """运行异步协程并返回结果（持久 loop + 线程 fallback）"""
+    ...
 ```
 
 ### 3. Episode 等待机制
@@ -223,3 +213,10 @@ def create_zep_client() -> ZepClientAdapter:
         from .zep_cloud_impl import ZepCloudClient
         return ZepCloudClient(ZEP_API_KEY)
 ```
+
+## 已知问题与 workaround
+
+### graphiti-core Issue #683
+
+某些 `graphiti-core` 版本在 `add_episode()` 写入 Neo4j 时会尝试保存嵌套 map，导致写入失败。
+当前通过 `backend/app/services/graphiti_patch.py` 在写入前做 sanitize（嵌套 dict/list → JSON 字符串）绕过。

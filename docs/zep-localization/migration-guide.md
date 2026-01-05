@@ -40,9 +40,15 @@ cd backend
 # 使用 uv（推荐）
 uv sync
 
+# 安装 Graphiti 本地后端依赖（可选）
+uv sync --extra graphiti
+
 # 或使用 pip
 pip install graphiti-core neo4j
 ```
+
+> 注意：当前 `oasis`（`camel-oasis`）与 `graphiti` 可能存在 Python Neo4j driver 版本冲突，导致无法在同一 venv 同时安装。
+> 如果你的目标是跑通“本地图谱链路”，建议先只启用 `--extra graphiti`；完整链路（含仿真）需要先解决依赖冲突（见 `docs/zep-localization-plan.md` 的「7.5」）。
 
 ### 4. 配置环境变量
 
@@ -60,6 +66,11 @@ NEO4J_PASSWORD=password
 # LLM 配置（Graphiti 必需）
 LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL_NAME=your_chat_model
+
+# Graphiti 模型（推荐显式设置）
+GRAPHITI_LLM_MODEL=your_chat_model
+GRAPHITI_EMBEDDING_MODEL=your_embedding_model
 ```
 
 ### 5. 启动应用
