@@ -129,7 +129,7 @@ echo "模拟环境: $(.venv-simulation/bin/python -c 'import neo4j; print(neo4j.
 
 ## 问题排查
 
-详见 [zep-localization/troubleshooting.md](zep-localization/troubleshooting.md)
+详见 [docs/zep-localization/troubleshooting.md](docs/zep-localization/troubleshooting.md)
 
 ## 开发工具
 
