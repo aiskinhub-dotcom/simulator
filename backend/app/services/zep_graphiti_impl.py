@@ -16,6 +16,7 @@ Ontology 在 MVP 阶段先 no-op。
 import asyncio
 import logging
 import os
+import threading
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from functools import lru_cache
@@ -31,47 +32,129 @@ from .zep_adapter import (
 logger = logging.getLogger('mirofish.graphiti_client')
 
 
-# 全局持久事件循环（解决 Neo4j driver 跨循环绑定问题）
-_persistent_loop = None
-_loop_lock = __import__('threading').Lock()
+# ============================================================================
+# 单后台线程 + 专用事件循环（方案 A）
+# ============================================================================
+# 所有 Graphiti/Neo4j 异步操作都在这个专用线程的事件循环中执行
+# Flask 线程通过 run_coroutine_threadsafe 提交任务并等待结果
+# ============================================================================
+
+_async_loop: Optional[asyncio.AbstractEventLoop] = None
+_async_thread: Optional[threading.Thread] = None
+_init_lock = threading.Lock()
 
 
-def _get_persistent_loop():
-    """获取或创建持久事件循环"""
-    global _persistent_loop
-    if _persistent_loop is None or _persistent_loop.is_closed():
-        with _loop_lock:
-            if _persistent_loop is None or _persistent_loop.is_closed():
-                _persistent_loop = asyncio.new_event_loop()
-    return _persistent_loop
+def _start_async_loop():
+    """在后台线程中启动事件循环"""
+    global _async_loop
+    _async_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(_async_loop)
+    logger.info("Graphiti 专用事件循环已启动")
+    _async_loop.run_forever()
+
+
+def _ensure_async_loop():
+    """确保后台事件循环已启动"""
+    global _async_thread
+    if _async_thread is None or not _async_thread.is_alive():
+        with _init_lock:
+            if _async_thread is None or not _async_thread.is_alive():
+                _async_thread = threading.Thread(
+                    target=_start_async_loop,
+                    daemon=True,
+                    name="graphiti-async-loop"
+                )
+                _async_thread.start()
+                # 等待循环启动
+                while _async_loop is None:
+                    import time
+                    time.sleep(0.01)
 
 
 def _run_async(coro):
     """
     在同步上下文中运行异步协程
 
-    使用持久事件循环确保 Neo4j driver 绑定一致性。
-    不使用 asyncio.run()（它会创建新循环并在完成后关闭）。
+    使用专用后台线程的事件循环，通过 run_coroutine_threadsafe 提交任务。
+    这样 Neo4j driver 始终绑定到同一个循环，避免跨循环问题。
+    """
+    _ensure_async_loop()
+    future = asyncio.run_coroutine_threadsafe(coro, _async_loop)
+    return future.result(timeout=300)  # 5分钟超时
+
+
+class DashScopeEmbedderWrapper:
+    """
+    DashScope 兼容的 Embedder 包装器
+
+    DashScope API 有批次大小限制（max 10），graphiti-core 的 OpenAIEmbedder
+    会将所有输入一次性发送。此包装器对请求进行分块处理。
+
+    注意：此类动态继承 EmbedderClient 以满足 Pydantic 类型检查。
+    """
+
+    def __init__(self, embedder: Any, max_batch_size: int = 10):
+        self._embedder = embedder
+        self.max_batch_size = max_batch_size
+        # 复制原 embedder 的属性以保持兼容性
+        if hasattr(embedder, 'config'):
+            self.config = embedder.config
+
+    async def create(self, input_data) -> list[float]:
+        """单条 embedding 请求（直接透传）"""
+        return await self._embedder.create(input_data)
+
+    async def create_batch(self, input_data_list: list[str]) -> list[list[float]]:
+        """批量 embedding 请求（分块处理）"""
+        if len(input_data_list) <= self.max_batch_size:
+            return await self._embedder.create_batch(input_data_list)
+
+        # 分块处理
+        results = []
+        for i in range(0, len(input_data_list), self.max_batch_size):
+            chunk = input_data_list[i : i + self.max_batch_size]
+            chunk_results = await self._embedder.create_batch(chunk)
+            results.extend(chunk_results)
+        return results
+
+
+def _create_dashscope_embedder_wrapper(base_embedder: Any, max_batch_size: int = 10) -> Any:
+    """
+    创建 DashScope 兼容的 Embedder 包装器
+
+    动态继承 EmbedderClient 以满足 graphiti-core 的 Pydantic 类型检查。
     """
     try:
-        # 检查是否在已有事件循环中
-        loop = asyncio.get_running_loop()
-        # 在运行中的循环内，尝试使用 nest_asyncio
-        try:
-            import nest_asyncio
-            nest_asyncio.apply()
-            return loop.run_until_complete(coro)
-        except ImportError:
-            pass
-        # fallback: 在独立线程中运行
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(lambda: _get_persistent_loop().run_until_complete(coro))
-            return future.result()
-    except RuntimeError:
-        # 没有运行中的事件循环，使用持久循环
-        loop = _get_persistent_loop()
-        return loop.run_until_complete(coro)
+        from graphiti_core.embedder.client import EmbedderClient
+
+        class _DashScopeEmbedderClient(EmbedderClient):
+            """动态生成的 EmbedderClient 子类"""
+
+            def __init__(self, embedder: Any, batch_size: int):
+                self._embedder = embedder
+                self.max_batch_size = batch_size
+                if hasattr(embedder, 'config'):
+                    self.config = embedder.config
+
+            async def create(self, input_data) -> list[float]:
+                return await self._embedder.create(input_data)
+
+            async def create_batch(self, input_data_list: list[str]) -> list[list[float]]:
+                if len(input_data_list) <= self.max_batch_size:
+                    return await self._embedder.create_batch(input_data_list)
+
+                results = []
+                for i in range(0, len(input_data_list), self.max_batch_size):
+                    chunk = input_data_list[i : i + self.max_batch_size]
+                    chunk_results = await self._embedder.create_batch(chunk)
+                    results.extend(chunk_results)
+                return results
+
+        return _DashScopeEmbedderClient(base_embedder, max_batch_size)
+
+    except ImportError:
+        # fallback: 返回普通包装器
+        return DashScopeEmbedderWrapper(base_embedder, max_batch_size)
 
 
 class GraphitiClient(ZepClientAdapter):
@@ -199,6 +282,8 @@ class GraphitiClient(ZepClientAdapter):
 
         默认 embedding model 是 `text-embedding-3-small`（OpenAI），DashScope 下需要显式配置：
         - GRAPHITI_EMBEDDING_MODEL=text-embedding-v4
+
+        注意：DashScope API 有批次大小限制（max 10），使用 DashScopeEmbedderWrapper 处理。
         """
         from graphiti_core.embedder.openai import OpenAIEmbedder, OpenAIEmbedderConfig
 
@@ -218,7 +303,14 @@ class GraphitiClient(ZepClientAdapter):
                 base_url=base_url,
             )
 
-        return OpenAIEmbedder(config=config)
+        base_embedder = OpenAIEmbedder(config=config)
+
+        # DashScope API 有批次大小限制，需要包装
+        if self._is_openai_compatible_only():
+            logger.info("检测到非标准 OpenAI API，启用 DashScope Embedder 分块处理")
+            return _create_dashscope_embedder_wrapper(base_embedder, max_batch_size=10)
+
+        return base_embedder
 
     # ==================== Graph 操作 ====================
 

@@ -72,6 +72,20 @@ cd backend && uv run python -m flask run
 | `NEO4J_URI` | Neo4j 连接地址 | `bolt://localhost:7687` |
 | `NEO4J_USER` | Neo4j 用户名 | `neo4j` |
 | `NEO4J_PASSWORD` | Neo4j 密码 | `password` |
+| `GRAPHITI_LLM_MODEL` | Graphiti 使用的 LLM 模型名（推荐显式设置） | 继承 `LLM_MODEL_NAME` |
+| `GRAPHITI_EMBEDDING_MODEL` | Graphiti 使用的 embedding 模型名（DashScope 推荐 `text-embedding-v4`） | Graphiti 默认值 |
+
+## 已知限制
+
+### 1) graphiti-core Issue #683（已通过 workaround 绕过）
+
+在部分 `graphiti-core` 版本中，`add_episode()` 写入 Neo4j 时会尝试保存嵌套 map（Neo4j property 不支持），导致写入失败。
+当前在 MiroFish 内部通过 `backend/app/services/graphiti_patch.py` 做了 sanitize（嵌套 dict/list → JSON 字符串）来避免阻塞。
+
+### 2) 依赖冲突（Full parity 的阻塞点）
+
+`camel-oasis` 与 `graphiti-core` 对 Python Neo4j driver 的版本约束可能冲突，导致同一 venv 难以同时安装两者。
+如需完整链路（仿真 + 本地图谱）同时启用，建议参考 `docs/zep-localization-plan.md` 的「7.5」采用升级依赖或拆分运行时的方案。
 
 ## 文档目录
 
