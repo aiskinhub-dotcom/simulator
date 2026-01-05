@@ -16,6 +16,13 @@ else:
     # 如果根目录没有 .env，尝试加载环境变量（用于生产环境）
     load_dotenv()
 
+# Graphiti 需要 OPENAI_* 环境变量，从 LLM_* 映射
+# 仅在未显式设置时才映射，避免覆盖用户的显式配置
+if not os.environ.get('OPENAI_API_KEY') and os.environ.get('LLM_API_KEY'):
+    os.environ['OPENAI_API_KEY'] = os.environ['LLM_API_KEY']
+if not os.environ.get('OPENAI_BASE_URL') and os.environ.get('LLM_BASE_URL'):
+    os.environ['OPENAI_BASE_URL'] = os.environ['LLM_BASE_URL']
+
 
 class Config:
     """Flask配置类"""
@@ -34,6 +41,12 @@ class Config:
     
     # Zep配置
     ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
+    ZEP_BACKEND = os.environ.get('ZEP_BACKEND', 'cloud')  # 'cloud' | 'graphiti'
+
+    # Graphiti / Neo4j 配置（本地部署时使用）
+    NEO4J_URI = os.environ.get('NEO4J_URI', 'bolt://localhost:7687')
+    NEO4J_USER = os.environ.get('NEO4J_USER', 'neo4j')
+    NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD', 'password')
     
     # 文件上传配置
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
@@ -69,7 +82,12 @@ class Config:
         errors = []
         if not cls.LLM_API_KEY:
             errors.append("LLM_API_KEY 未配置")
-        if not cls.ZEP_API_KEY:
-            errors.append("ZEP_API_KEY 未配置")
+        # 根据后端类型验证配置
+        if cls.ZEP_BACKEND == 'cloud':
+            if not cls.ZEP_API_KEY:
+                errors.append("ZEP_API_KEY 未配置（ZEP_BACKEND=cloud 时必需）")
+        elif cls.ZEP_BACKEND == 'graphiti':
+            if not all([cls.NEO4J_URI, cls.NEO4J_USER, cls.NEO4J_PASSWORD]):
+                errors.append("Neo4j 配置不完整（ZEP_BACKEND=graphiti 时必需）")
         return errors
 

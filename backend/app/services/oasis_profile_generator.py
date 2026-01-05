@@ -6,6 +6,10 @@ OASIS Agent Profile生成器
 1. 调用Zep检索功能二次丰富节点信息
 2. 优化提示词生成非常详细的人设
 3. 区分个人实体和抽象群体实体
+
+支持双后端：
+- Zep Cloud (默认)
+- Graphiti + Neo4j 本地部署
 """
 
 import json
@@ -16,11 +20,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from openai import OpenAI
-from zep_cloud.client import Zep
 
 from ..config import Config
 from ..utils.logger import get_logger
 from .zep_entity_reader import EntityNode, ZepEntityReader
+from .zep_factory import get_zep_client
+from .zep_adapter import ZepClientAdapter
 
 logger = get_logger('mirofish.oasis_profile')
 
@@ -178,7 +183,7 @@ class OasisProfileGenerator:
     ]
     
     def __init__(
-        self, 
+        self,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         model_name: Optional[str] = None,
@@ -188,25 +193,23 @@ class OasisProfileGenerator:
         self.api_key = api_key or Config.LLM_API_KEY
         self.base_url = base_url or Config.LLM_BASE_URL
         self.model_name = model_name or Config.LLM_MODEL_NAME
-        
+
         if not self.api_key:
             raise ValueError("LLM_API_KEY 未配置")
-        
+
         self.client = OpenAI(
             api_key=self.api_key,
             base_url=self.base_url
         )
-        
-        # Zep客户端用于检索丰富上下文
-        self.zep_api_key = zep_api_key or Config.ZEP_API_KEY
-        self.zep_client = None
+
+        # Zep客户端用于检索丰富上下文（使用适配器工厂）
+        self.zep_client: Optional[ZepClientAdapter] = None
         self.graph_id = graph_id
-        
-        if self.zep_api_key:
-            try:
-                self.zep_client = Zep(api_key=self.zep_api_key)
-            except Exception as e:
-                logger.warning(f"Zep客户端初始化失败: {e}")
+
+        try:
+            self.zep_client = get_zep_client()
+        except Exception as e:
+            logger.warning(f"Zep客户端初始化失败: {e}")
     
     def generate_profile_from_entity(
         self, 
@@ -318,20 +321,18 @@ class OasisProfileGenerator:
         def search_edges():
             """搜索边（事实/关系）- 带重试机制"""
             max_retries = 3
-            last_exception = None
             delay = 2.0
-            
+
             for attempt in range(max_retries):
                 try:
-                    return self.zep_client.graph.search(
-                        query=comprehensive_query,
+                    return self.zep_client.search(
                         graph_id=self.graph_id,
+                        query=comprehensive_query,
                         limit=30,
                         scope="edges",
                         reranker="rrf"
                     )
                 except Exception as e:
-                    last_exception = e
                     if attempt < max_retries - 1:
                         logger.debug(f"Zep边搜索第 {attempt + 1} 次失败: {str(e)[:80]}, 重试中...")
                         time.sleep(delay)
@@ -339,24 +340,22 @@ class OasisProfileGenerator:
                     else:
                         logger.debug(f"Zep边搜索在 {max_retries} 次尝试后仍失败: {e}")
             return None
-        
+
         def search_nodes():
             """搜索节点（实体摘要）- 带重试机制"""
             max_retries = 3
-            last_exception = None
             delay = 2.0
-            
+
             for attempt in range(max_retries):
                 try:
-                    return self.zep_client.graph.search(
-                        query=comprehensive_query,
+                    return self.zep_client.search(
                         graph_id=self.graph_id,
+                        query=comprehensive_query,
                         limit=20,
                         scope="nodes",
                         reranker="rrf"
                     )
                 except Exception as e:
-                    last_exception = e
                     if attempt < max_retries - 1:
                         logger.debug(f"Zep节点搜索第 {attempt + 1} 次失败: {str(e)[:80]}, 重试中...")
                         time.sleep(delay)

@@ -1,6 +1,10 @@
 """
 Zep图谱记忆更新服务
 将模拟中的Agent活动动态更新到Zep图谱中
+
+支持双后端：
+- Zep Cloud (默认)
+- Graphiti + Neo4j 本地部署
 """
 
 import os
@@ -12,10 +16,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from queue import Queue, Empty
 
-from zep_cloud.client import Zep
-
 from ..config import Config
 from ..utils.logger import get_logger
+from .zep_factory import get_zep_client
+from .zep_adapter import ZepClientAdapter
 
 logger = get_logger('mirofish.zep_graph_memory_updater')
 
@@ -225,18 +229,15 @@ class ZepGraphMemoryUpdater:
     def __init__(self, graph_id: str, api_key: Optional[str] = None):
         """
         初始化更新器
-        
+
         Args:
             graph_id: Zep图谱ID
-            api_key: Zep API Key（可选，默认从配置读取）
+            api_key: Zep API Key（可选，已废弃，使用工厂模式）
         """
         self.graph_id = graph_id
-        self.api_key = api_key or Config.ZEP_API_KEY
-        
-        if not self.api_key:
-            raise ValueError("ZEP_API_KEY未配置")
-        
-        self.client = Zep(api_key=self.api_key)
+
+        # 使用单例获取适配器（避免重复初始化）
+        self.client: ZepClientAdapter = get_zep_client()
         
         # 活动队列
         self._activity_queue: Queue = Queue()
@@ -395,10 +396,10 @@ class ZepGraphMemoryUpdater:
         # 带重试的发送
         for attempt in range(self.MAX_RETRIES):
             try:
-                self.client.graph.add(
+                self.client.add_episode(
                     graph_id=self.graph_id,
-                    type="text",
-                    data=combined_text
+                    data=combined_text,
+                    episode_type="text"
                 )
                 
                 self._total_sent += 1
