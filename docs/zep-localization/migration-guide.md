@@ -77,8 +77,10 @@ GRAPHITI_EMBEDDING_MODEL=your_embedding_model
 
 ```bash
 cd backend
-uv run python -m flask run
+uv run python run.py
 ```
+
+> 也可以在项目根目录直接运行：`npm run backend`（仅启动后端）或 `npm run dev`（同时启动前后端）。
 
 ## Docker 部署说明
 
@@ -164,7 +166,7 @@ export ZEP_BACKEND=cloud
 export ZEP_API_KEY=your_api_key
 
 # 重启应用
-cd backend && uv run python -m flask run
+cd backend && uv run python run.py
 ```
 
 无需修改任何代码，应用会自动使用 Zep Cloud 后端。

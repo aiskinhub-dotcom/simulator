@@ -42,36 +42,57 @@ docker-compose -f docker-compose.local.yml up -d
 # 2. 等待服务就绪
 docker-compose -f docker-compose.local.yml ps
 
-# 3. 设置环境变量
+# 3. 安装后端依赖（graphiti 模式需要）
+cd backend
+uv sync --extra graphiti
+
+# 4. 设置环境变量（至少需要 LLM_*；OPENAI_* 会自动从 LLM_* 映射）
 export ZEP_BACKEND=graphiti
 export NEO4J_URI=bolt://localhost:7687
 export NEO4J_USER=neo4j
 export NEO4J_PASSWORD=password
+export LLM_API_KEY=your_api_key
+export LLM_BASE_URL=https://api.openai.com/v1
+export LLM_MODEL_NAME=your_chat_model
+export GRAPHITI_LLM_MODEL=your_chat_model
+export GRAPHITI_EMBEDDING_MODEL=your_embedding_model
 
-# 4. 启动后端
-cd backend && uv run python -m flask run
+# 5. 启动后端
+uv run python run.py
 ```
 
 ### 使用 Zep Cloud 后端
 
 ```bash
-# 设置环境变量
+# 1. 安装后端依赖（cloud 模式不需要 graphiti extra）
+cd backend
+uv sync
+
+# 2. 设置环境变量（仍需要 LLM_* 用于 ontology/report 等能力）
 export ZEP_BACKEND=cloud  # 或不设置，默认 cloud
 export ZEP_API_KEY=your_api_key
+export LLM_API_KEY=your_api_key
+export LLM_BASE_URL=https://api.openai.com/v1
+export LLM_MODEL_NAME=your_chat_model
 
-# 启动后端
-cd backend && uv run python -m flask run
+# 3. 启动后端
+uv run python run.py
 ```
 
 ## 环境变量
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
+| `LLM_API_KEY` | LLM API Key（后端必填） | - |
+| `LLM_BASE_URL` | OpenAI-compatible Base URL | `https://api.openai.com/v1` |
+| `LLM_MODEL_NAME` | 默认聊天模型 | `gpt-4o-mini` |
 | `ZEP_BACKEND` | 后端选择：`cloud` 或 `graphiti` | `cloud` |
 | `ZEP_API_KEY` | Zep Cloud API 密钥（cloud 模式必填） | - |
 | `NEO4J_URI` | Neo4j 连接地址 | `bolt://localhost:7687` |
 | `NEO4J_USER` | Neo4j 用户名 | `neo4j` |
 | `NEO4J_PASSWORD` | Neo4j 密码 | `password` |
+| `OPENAI_API_KEY` | Graphiti 用的 OpenAI-compatible Key（未设置时自动继承 `LLM_API_KEY`） | - |
+| `OPENAI_BASE_URL` | Graphiti 用的 OpenAI-compatible Base URL（未设置时自动继承 `LLM_BASE_URL`） | - |
 | `GRAPHITI_LLM_MODEL` | Graphiti 使用的 LLM 模型名（推荐显式设置） | 继承 `LLM_MODEL_NAME` |
 | `GRAPHITI_EMBEDDING_MODEL` | Graphiti 使用的 embedding 模型名（DashScope 推荐 `text-embedding-v4`） | Graphiti 默认值 |
 

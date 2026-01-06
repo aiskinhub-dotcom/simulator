@@ -26,7 +26,7 @@ backend/
    cd backend
    uv venv .venv-simulation --python 3.11
    source .venv-simulation/bin/activate
-   uv pip install camel-oasis openai python-dotenv
+   uv pip install camel-oasis==0.2.5 camel-ai==0.2.78 openai python-dotenv
    ```
 
 2. 修改 `simulation_runner.py`，自动检测并使用独立环境：
@@ -54,8 +54,7 @@ backend/
 ### 问题描述
 DashScope API 对 embedding 请求有批次大小限制（最大 10 条），但 `graphiti-core` 的 `OpenAIEmbedder` 会将所有输入一次性发送，导致 400 错误：
 ```
-Error code: 400 - {'error': {'type': 'invalid_request_error',
-'param': 'input', 'message': 'Invalid input format: too many texts'}}
+Error code: 400 - ... batch size is invalid, it should not be larger than 10
 ```
 
 ### 解决方案
@@ -67,15 +66,18 @@ class DashScopeEmbedderWrapper:
         self._embedder = embedder
         self.max_batch_size = max_batch_size
 
-    async def create(self, input: list[str]) -> list[list[float]]:
-        if len(input) <= self.max_batch_size:
-            return await self._embedder.create(input)
+    async def create(self, input_data) -> list[float]:
+        return await self._embedder.create(input_data)
+
+    async def create_batch(self, input_data_list: list[str]) -> list[list[float]]:
+        if len(input_data_list) <= self.max_batch_size:
+            return await self._embedder.create_batch(input_data_list)
 
         # 分块处理
         results = []
-        for i in range(0, len(input), self.max_batch_size):
-            batch = input[i:i + self.max_batch_size]
-            batch_result = await self._embedder.create(batch)
+        for i in range(0, len(input_data_list), self.max_batch_size):
+            batch = input_data_list[i:i + self.max_batch_size]
+            batch_result = await self._embedder.create_batch(batch)
             results.extend(batch_result)
         return results
 ```
@@ -169,9 +171,13 @@ def _run_async(coro):
 在 `Step3Simulation.vue` 的 `fetchRunStatus()` 中添加 `failed` 状态检测：
 
 ```javascript
-if (data.status === 'completed' || data.status === 'failed') {
-  clearInterval(statusInterval.value);
-  statusInterval.value = null;
+if (data.runner_status === 'failed') {
+  const errorMsg = data.error || '模拟运行失败'
+  addLog(`✗ 模拟失败: ${errorMsg}`)
+  phase.value = 2
+  stopPolling()
+  emit('update-status', 'error')
+  return
 }
 ```
 

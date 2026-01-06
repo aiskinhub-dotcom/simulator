@@ -461,7 +461,7 @@ MATCH (n:Entity {group_id: $group_id}) RETURN n
 **解决方案**：
 
 - 不使用 `asyncio.run()`（它会创建/关闭新 loop，容易触发 Neo4j driver “跨 loop 绑定”问题）
-- 在适配器层提供 `_run_async()`：复用持久 event loop；如遇到 running loop（未来引入 async runtime），用 `nest_asyncio` 或线程 fallback
+- 在适配器层提供 `_run_async()`：统一把异步调用丢到专用后台线程/事件循环里执行（避免 running loop/跨 loop 绑定问题）
 - 参考实现：`backend/app/services/zep_graphiti_impl.py` 的 `_run_async()`（已处理上述场景）
 
 ### 7.4 LLM 配置对齐（MVP 中风险）
@@ -609,7 +609,7 @@ export GRAPHITI_EMBEDDING_MODEL=text-embedding-v4
 
 # 4. 安装依赖
 # 注意：graphiti 与 oasis 目前存在 neo4j driver 冲突，建议分 venv/容器
-cd backend && uv sync --extra graphiti
+(cd backend && uv sync --extra graphiti)
 
 # 5. 启动服务
 npm run dev
@@ -633,7 +633,7 @@ open http://localhost:3000
 2. **零侵入迁移**：现有代码最小改动，向后兼容
 3. **配置驱动**：通过环境变量切换后端，无需改代码
 4. **Docker 一键部署**：降低使用门槛
-5. **完整测试覆盖**：确保功能等价
+5. **端到端验收清单**：可复现跑通并录屏留档
 
 ---
 

@@ -48,8 +48,10 @@
 | `backend/app/services/zep_adapter.py` | 抽象接口和数据结构定义 |
 | `backend/app/services/zep_cloud_impl.py` | Zep Cloud 实现 |
 | `backend/app/services/zep_graphiti_impl.py` | Graphiti 本地实现 |
+| `backend/app/services/graphiti_patch.py` | graphiti-core workaround（Issue #683） |
 | `backend/app/services/zep_factory.py` | 工厂函数 |
 | `docker-compose.local.yml` | Neo4j Docker 部署配置 |
+| `backend/requirements-graphiti.txt` | graphiti 环境最小依赖（可选） |
 | `docs/zep-localization/` | 本文档目录 |
 
 ### 修改文件
@@ -62,7 +64,9 @@
 | `backend/app/services/zep_entity_reader.py` | 迁移到适配器接口 |
 | `backend/app/services/zep_graph_memory_updater.py` | 迁移到适配器接口 |
 | `backend/app/services/oasis_profile_generator.py` | 迁移到适配器接口 |
-| `backend/pyproject.toml` | 添加 `graphiti-core`, `neo4j` 依赖 |
+| `backend/app/api/graph.py` | cloud/graphiti 模式兼容（cloud 才要求 `ZEP_API_KEY`） |
+| `backend/app/api/simulation.py` | cloud/graphiti 模式兼容（cloud 才要求 `ZEP_API_KEY`） |
+| `backend/pyproject.toml` | graphiti/oasis 设为 optional extras |
 
 ## 数据结构
 
@@ -106,15 +110,16 @@ class SearchResult:
 
 | 适配器方法 | Zep Cloud API | Graphiti API |
 |------------|---------------|--------------|
-| `create_graph()` | `graph.create()` | Neo4j Cypher 创建 |
+| `create_graph()` | `graph.create()` | 记录元数据（Graphiti 无显式 create；按 `group_id` 写入即生效） |
 | `delete_graph()` | `graph.delete()` | Neo4j Cypher 删除 |
 | `add_episode()` | `graph.add()` | `graphiti.add_episode()` |
-| `add_episode_batch()` | 循环 `graph.add()` | 循环 `add_episode()` |
+| `add_episode_batch()` | `graph.add_batch()` | `graphiti.add_episode_bulk()` |
 | `search()` | `graph.search()` | 优先 `graphiti.search_()`，fallback `graphiti.search()` |
 | `get_all_nodes()` | `node.get_by_graph_id()` | Neo4j Cypher 查询 |
 | `get_all_edges()` | `edge.get_by_graph_id()` | Neo4j Cypher 查询 |
 | `get_node()` | `node.get()` | Neo4j Cypher 查询 |
-| `get_node_edges()` | `node.get_edges()` | Neo4j Cypher 查询 |
+| `get_node_edges()` | `node.get_entity_edges()` | Neo4j Cypher 查询 |
+| `get_episode_status()` | `episode.get()` | 直接返回 processed=true（同步处理） |
 | `wait_for_episode()` | `episode.get()` 轮询 | 直接返回（同步处理） |
 | `set_ontology()` | `graph.set_ontology()` | 暂不支持 |
 
@@ -146,8 +151,8 @@ Graphiti 使用 async API，MiroFish 业务代码使用同步调用。
 **解决方案**：`_run_async()` 辅助方法（使用持久事件循环，避免 Neo4j driver 绑定到被关闭的 loop）
 
 ```python
-def _run_async(self, coro):
-    """运行异步协程并返回结果（持久 loop + 线程 fallback）"""
+def _run_async(coro):
+    """在同步上下文中运行异步协程（单后台线程 + run_coroutine_threadsafe）"""
     ...
 ```
 

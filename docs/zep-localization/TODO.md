@@ -88,13 +88,15 @@ def _ensure_async_loop():
 
 | 当前位置 | 配置项 | 应改为 |
 |---------|-------|-------|
-| `zep_graphiti_impl.py` | Neo4j 密码 | 环境变量 |
-| `zep_graphiti_impl.py` | 超时时间 300s | 环境变量 |
-| `simulation_runner.py` | .venv-simulation 路径 | 环境变量 |
-| `DashScopeEmbedderWrapper` | batch_size=10 | 环境变量 |
+| `backend/app/config.py` | `NEO4J_PASSWORD` 默认值 `password` | 生产环境去掉默认值/强校验 |
+| `backend/app/services/zep_graphiti_impl.py` | `_run_async()` 超时 300s | 环境变量（例如 `GRAPHITI_ASYNC_CALL_TIMEOUT_S`） |
+| `backend/app/services/simulation_runner.py` | `.venv-simulation` fallback 路径 | 环境变量（已支持 `SIMULATION_PYTHON`，可补一键化脚本/校验） |
+| `backend/app/services/zep_graphiti_impl.py` | DashScope embedding `batch_size=10` | 环境变量（例如 `GRAPHITI_EMBEDDING_BATCH_SIZE`） |
 
-### [ ] P1: 配置验证
-启动时检查必需配置是否存在，缺失时给出明确提示。
+### [ ] P1: 配置验证完善
+当前已有基础校验（`backend/app/config.py` 的 `Config.validate()`），建议补齐：
+- graphiti 模式下的 LLM/embedder 相关配置提示（例如未设置 `GRAPHITI_*` 时的建议）
+- simulation venv 可用性检查（缺依赖时给出“如何创建 .venv-simulation”的明确指引）
 
 ### [ ] P1: 环境变量命名收敛
 把分散的“默认值/魔法数字”收敛成明确的 env var（示例）：

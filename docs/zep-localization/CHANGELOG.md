@@ -4,8 +4,8 @@
 
 MiroFish 原本依赖 Zep Cloud 提供知识图谱和记忆服务。本次本地化的目标是：
 
-1. **消除外部依赖**：不再需要 Zep Cloud API Key，完全本地运行
-2. **降低成本**：无 API 调用费用，适合开发和演示
+1. **替换 Zep Cloud**：不再需要 Zep Cloud API Key 也能跑通主流程（仍需要 LLM API）
+2. **降低成本**：避免 Zep Cloud 调用成本，适合开发和演示
 3. **数据自主**：所有数据存储在本地 Neo4j，便于调试和控制
 
 ## 技术方案
@@ -21,7 +21,20 @@ MiroFish 原本依赖 Zep Cloud 提供知识图谱和记忆服务。本次本地
 
 ## 已实施改动
 
-### 1. Graphiti 本地客户端
+### 1. 适配器 + 双后端切换
+
+**文件**：
+- `backend/app/services/zep_adapter.py`
+- `backend/app/services/zep_cloud_impl.py`
+- `backend/app/services/zep_factory.py`
+
+**做了什么**：
+- 引入 `ZepClientAdapter`，把 cloud/graphiti 的差异收敛到实现层
+- 通过 `ZEP_BACKEND=cloud|graphiti` 配置切换后端
+
+---
+
+### 2. Graphiti 本地客户端
 
 **文件**：`backend/app/services/zep_graphiti_impl.py`
 
@@ -41,9 +54,11 @@ MiroFish 原本依赖 Zep Cloud 提供知识图谱和记忆服务。本次本地
 
 ---
 
-### 2. 双虚拟环境隔离
+### 3. 双虚拟环境隔离（建议做法）
 
-**文件**：
+> `.venv/` 目录不入库（见 `.gitignore`）。这里记录的是推荐的本地开发结构。
+
+**推荐结构**：
 - `backend/.venv/` - 主环境（Flask + graphiti-core）
 - `backend/.venv-simulation/` - 模拟环境（camel-ai/oasis）
 
@@ -62,7 +77,7 @@ MiroFish 原本依赖 Zep Cloud 提供知识图谱和记忆服务。本次本地
 
 ---
 
-### 3. 模拟环境自动检测
+### 4. 模拟环境自动检测
 
 **文件**：`backend/app/services/simulation_runner.py`
 
@@ -80,7 +95,7 @@ MiroFish 原本依赖 Zep Cloud 提供知识图谱和记忆服务。本次本地
 
 ---
 
-### 4. 前端状态修复
+### 5. 前端状态修复
 
 **文件**：`frontend/src/components/Step3Simulation.vue`
 
@@ -101,11 +116,17 @@ MiroFish 原本依赖 Zep Cloud 提供知识图谱和记忆服务。本次本地
 
 | 文件 | 用途 |
 |------|------|
-| `LOCAL-STARTUP.md` | 本地版启动指南 |
+| `LOCAL-STARTUP.md` | 本地版启动指南（仓库根目录） |
 | `docs/zep-localization/troubleshooting.md` | 问题排查指南 |
 | `docs/zep-localization/TODO.md` | 待完善清单 |
 | `docs/zep-localization/CHANGELOG.md` | 本文档 |
-| `backend/.venv-simulation/` | 模拟独立环境 |
+| `backend/app/services/zep_adapter.py` | 适配器接口定义 |
+| `backend/app/services/zep_cloud_impl.py` | Zep Cloud 适配实现 |
+| `backend/app/services/zep_graphiti_impl.py` | Graphiti 本地实现 |
+| `backend/app/services/graphiti_patch.py` | graphiti-core workaround（Issue #683） |
+| `backend/app/services/zep_factory.py` | 客户端工厂 + 单例 |
+| `docker-compose.local.yml` | Neo4j 本地部署 |
+| `backend/requirements-graphiti.txt` | graphiti 环境最小依赖（可选） |
 
 ---
 
@@ -114,6 +135,8 @@ MiroFish 原本依赖 Zep Cloud 提供知识图谱和记忆服务。本次本地
 | 文件 | 改动类型 | 说明 |
 |------|---------|------|
 | `backend/app/services/zep_graphiti_impl.py` | 重构 | 单后台线程 + DashScope Wrapper |
+| `backend/app/config.py` | 增强 | `LLM_* → OPENAI_*` 映射 + graphiti 配置 |
+| `backend/pyproject.toml` | 调整 | graphiti/oasis 设为 optional extras |
 | `backend/app/services/simulation_runner.py` | 新增函数 | `_get_simulation_python()` |
 | `frontend/src/components/Step3Simulation.vue` | 修复 | failed 状态检测 |
 
