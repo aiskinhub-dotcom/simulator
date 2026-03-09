@@ -62,5 +62,13 @@ dev = [
     "pytest-asyncio>=0.23.0",
 ]
 
+[tool.uv]
+conflicts = [
+    [
+        { extra = "graphiti" },
+        { extra = "oasis" },
+    ],
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
