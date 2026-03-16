@@ -36,23 +36,6 @@
 
 > In short: if you want your **data to stay local**, or need to run MiroFish in an **air-gapped environment**, MiroFish-Local is the version for you.
 
-## 🎬 Demo Videos
-
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/" target="_blank"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
-
-Click the image to watch the complete demo video for prediction using BettaFish-generated "Wuhan University Public Opinion Report"
-</div>
-
-> More demo videos coming soon: "Dream of the Red Chamber" ending simulation, financial prediction examples...
-
-## 🖼️ UI Screenshots
-
-<div align="center">
-<!-- UI screenshots coming soon -->
-<p><em>🖼️ UI screenshots coming soon...</em></p>
-</div>
-
 ## 🏗️ Architecture
 
 ```mermaid

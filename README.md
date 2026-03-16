@@ -36,23 +36,6 @@
 
 > 一句话总结：如果你希望**数据完全留在本地**，或者在**无外网环境**下运行 MiroFish，MiroFish-Local 就是你需要的版本。
 
-## 🎬 演示视频
-
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/" target="_blank"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
-
-点击图片查看使用微舆BettaFish生成的《武大舆情报告》进行预测的完整演示视频
-</div>
-
-> 红楼梦结局模拟推演演示视频、金融方向预测示例演示视频等陆续更新中...
-
-## 🖼️ UI 截图
-
-<div align="center">
-<!-- UI截图即将更新，敬请期待 -->
-<p><em>🖼️ UI 截图即将更新...</em></p>
-</div>
-
 ## 🏗️ 系统架构
 
 ```mermaid
