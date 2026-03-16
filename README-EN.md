@@ -1,53 +1,40 @@
 <div align="center">
 
-<img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>
+<img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish-Local Logo" width="75%"/>
 
-简洁通用的群体智能引擎，预测万物
-</br>
-<em>A Simple and Universal Swarm Intelligence Engine, Predicting Anything</em>
+# MiroFish-Local
 
-<a href="https://www.shanda.com/" target="_blank"><img src="./static/image/shanda_logo.png" alt="tt-a1i/MiroFish-local | Shanda" height="40"/></a>
+**Local-first fork of [MiroFish](https://github.com/666ghj/MiroFish) — with Graphiti + Neo4j for fully local deployment. Your data stays on your machine.**
+
+*A multi-agent swarm intelligence engine that simulates public opinion, market sentiment, and social dynamics. Runs entirely in your local environment.*
 
 [![GitHub Stars](https://img.shields.io/github/stars/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/stargazers)
-[![GitHub Watchers](https://img.shields.io/github/watchers/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/watchers)
 [![GitHub Forks](https://img.shields.io/github/forks/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/network)
-[![GitHub Issues](https://img.shields.io/github/issues/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/pulls)
-
 [![GitHub License](https://img.shields.io/github/license/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/blob/main/LICENSE)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tt-a1i/MiroFish-local)
-[![Version](https://img.shields.io/badge/version-v0.1.0-green.svg?style=flat-square)](https://github.com/tt-a1i/MiroFish-local)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 
 [English](./README-EN.md) | [中文文档](./README.md)
 
 </div>
 
-## ⚡ Overview
+## 🤔 What is this?
 
-**MiroFish** is a next-generation AI prediction engine powered by multi-agent technology. By extracting seed information from the real world (such as breaking news, policy drafts, or financial signals), it automatically constructs a high-fidelity parallel digital world. Within this space, thousands of intelligent agents with independent personalities, long-term memory, and behavioral logic freely interact and undergo social evolution. You can inject variables dynamically from a "God's-eye view" to precisely deduce future trajectories — **rehearse the future in a digital sandbox, and win decisions after countless simulations**.
+[MiroFish](https://github.com/666ghj/MiroFish) is a multi-agent AI prediction engine that constructs high-fidelity parallel digital worlds for swarm intelligence simulation. However, the original MiroFish relies entirely on **Zep Cloud** for memory and knowledge graph services — data passes through a third-party cloud, and it cannot run in offline environments.
 
-> You only need to: Upload seed materials (data analysis reports or interesting novel stories) and describe your prediction requirements in natural language</br>
-> MiroFish will return: A detailed prediction report and a deeply interactive high-fidelity digital world
+**MiroFish-Local** adds a **Graphiti + Neo4j local mode** on top of the original, allowing you to run the entire simulation pipeline without any cloud-based memory service. The original Zep Cloud mode is fully preserved — switch between modes with a single environment variable.
 
-### Our Vision
+### How it differs from upstream MiroFish
 
-MiroFish is dedicated to creating a swarm intelligence mirror that maps reality. By capturing the collective emergence triggered by individual interactions, we break through the limitations of traditional prediction:
+| Feature | Original MiroFish | MiroFish-Local |
+|---------|:-----------------:|:--------------:|
+| Memory / Knowledge Graph | Zep Cloud (remote) | **Graphiti + Neo4j (local)** or Zep Cloud |
+| Cloud Dependency | Requires Zep Cloud API | **Optional: supports both Cloud and local modes** |
+| Data Privacy | Data passes through third-party cloud | **Local mode keeps all data on-premise** |
+| Entity Extraction | Built into Zep Cloud | **Local LLM extraction (via Graphiti)** |
+| Deployment | Requires Zep Cloud account | **Docker Compose one-click Neo4j startup** |
+| Mode Switching | N/A | **`ZEP_BACKEND=cloud\|graphiti`** |
 
-- **At the Macro Level**: We are a rehearsal laboratory for decision-makers, allowing policies and public relations to be tested at zero risk
-- **At the Micro Level**: We are a creative sandbox for individual users — whether deducing novel endings or exploring imaginative scenarios, everything can be fun, playful, and accessible
-
-From serious predictions to playful simulations, we let every "what if" see its outcome, making it possible to predict anything.
-
-### Key Highlights
-
-- 🧠 **Multi-Agent Swarm Intelligence Simulation** — Thousands of agents with independent personalities interact freely, producing emergent social dynamics
-- 🌐 **High-Fidelity Parallel World Construction** — Automatically extracts entity relationships via GraphRAG to build simulation environments in one click
-- 📊 **Automated Prediction Report Generation** — ReportAgent performs deep analysis of simulation results and outputs structured prediction reports
-- 💬 **Deep Interaction with the Simulated World** — Chat with any character in the simulation to explore parallel possibilities
-- 🔧 **Cloud / Local Dual-Mode Deployment** — Quick start with Zep Cloud, or go fully local with Graphiti + Neo4j
+> In short: if you want your **data to stay local**, or need to run MiroFish in an **air-gapped environment**, MiroFish-Local is the version for you.
 
 ## 🎬 Demo Videos
 
@@ -80,7 +67,7 @@ flowchart LR
 | Module | Description |
 |--------|-------------|
 | **Seed Input** | Accepts user-uploaded seed materials (news, reports, novels, etc.) and parses prediction requirements |
-| **Graph Building** | Extracts entity relationships via GraphRAG, injects individual and collective memory to build the knowledge graph |
+| **Graph Building** | Extracts entity relationships via GraphRAG, injects individual and collective memory to build the knowledge graph. Local mode uses Graphiti + Neo4j instead of Zep Cloud |
 | **Environment Setup** | Automatically generates agent personas; environment configuration Agent injects simulation parameters |
 | **Parallel Simulation** | OASIS engine drives large-scale agent interactions in parallel, dynamically updating temporal memory |
 | **Report Generation** | ReportAgent uses a rich toolset to deeply interact with the post-simulation environment and produce prediction reports |
@@ -194,8 +181,13 @@ LLM_BOOST_MODEL_NAME=gpt-4o-mini
 If you chose `ZEP_BACKEND=graphiti`, start the Neo4j database first:
 
 ```bash
-# Start dependency services (Neo4j) via Docker Compose
+# Start dependency services (Neo4j 5.26 + APOC plugin) via Docker Compose
 docker-compose -f docker-compose.local.yml up -d
+
+# Check service status
+docker-compose -f docker-compose.local.yml ps
+
+# Neo4j Browser available at http://localhost:7474 (user: neo4j, password: password)
 ```
 
 ### 3. Install Dependencies
@@ -250,11 +242,18 @@ We welcome Pull Requests and Issues! Whether it's bug reports, feature suggestio
 
 > Contributing guidelines are being finalized — stay tuned.
 
-## 📄 Acknowledgments
+## 📄 Credits & Attribution
 
-**MiroFish has received strategic support and incubation from Shanda Group!**
+**This project is a modified fork of [MiroFish](https://github.com/666ghj/MiroFish).**
 
-MiroFish's core simulation engine is powered by **[OASIS](https://github.com/camel-ai/oasis)**. OASIS is a high-performance social media simulation framework developed by the [CAMEL-AI](https://github.com/camel-ai) team, supporting million-scale agent interaction simulations and providing a solid technical foundation for MiroFish's swarm intelligence emergence. We sincerely thank the CAMEL-AI team for their open-source contributions!
+Thanks to the original project [666ghj/MiroFish](https://github.com/666ghj/MiroFish) and Shanda Group for their open-source contributions. MiroFish's core simulation engine is powered by **[OASIS](https://github.com/camel-ai/oasis)**, a high-performance social media simulation framework developed by the [CAMEL-AI](https://github.com/camel-ai) team, supporting million-scale agent interaction simulations.
+
+**Key changes in this fork:**
+- Added Graphiti + Neo4j local memory backend, replacing Zep Cloud dependency
+- Implemented `ZEP_BACKEND` environment variable for `cloud` / `graphiti` dual-mode switching
+- Added Docker Compose configuration for one-click Neo4j 5.26 + APOC plugin startup
+- Auto-mapping of LLM configuration to Graphiti, reducing redundant configuration
+- Added search re-ranking fallback (non-standard APIs auto-switch to RRF re-ranking)
 
 ## 📈 Project Statistics
 
