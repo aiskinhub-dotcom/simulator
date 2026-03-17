@@ -36,6 +36,19 @@
 
 > 一句话总结：如果你希望**数据完全留在本地**，或者在**无外网环境**下运行 MiroFish，MiroFish-Local 就是你需要的版本。
 
+## ⚡ 3 分钟体验
+
+```bash
+git clone https://github.com/tt-a1i/MiroFish-local.git
+cd MiroFish-local
+cp .env.example .env           # 编辑 .env 填入 LLM_API_KEY
+npm run setup:all              # 安装依赖
+npm run backend &              # 启动后端
+python demo.py                 # 运行 Demo！
+```
+
+Demo 脚本会自动上传一条[示例新闻](./examples/seed_news.txt)，调用 LLM 提取实体关系并构建知识图谱，让你直观看到 MiroFish 的核心能力。
+
 ## 🏗️ 系统架构
 
 ```mermaid

@@ -36,6 +36,19 @@
 
 > In short: if you want your **data to stay local**, or need to run MiroFish in an **air-gapped environment**, MiroFish-Local is the version for you.
 
+## ⚡ 3-Minute Quick Demo
+
+```bash
+git clone https://github.com/tt-a1i/MiroFish-local.git
+cd MiroFish-local
+cp .env.example .env           # Edit .env and add your LLM_API_KEY
+npm run setup:all              # Install dependencies
+npm run backend &              # Start backend
+python demo.py                 # Run the demo!
+```
+
+The demo script auto-uploads a [sample news article](./examples/seed_news.txt), calls the LLM to extract entities and relationships, and builds a knowledge graph — giving you a hands-on feel for MiroFish's core capabilities.
+
 ## 🏗️ Architecture
 
 ```mermaid
