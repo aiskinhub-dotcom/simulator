@@ -12,6 +12,7 @@
 [![GitHub Forks](https://img.shields.io/github/forks/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/network)
 [![GitHub License](https://img.shields.io/github/license/tt-a1i/MiroFish-local?style=flat-square)](https://github.com/tt-a1i/MiroFish-local/blob/main/LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![CI](https://github.com/tt-a1i/MiroFish-local/actions/workflows/ci.yml/badge.svg)](https://github.com/tt-a1i/MiroFish-local/actions/workflows/ci.yml)
 
 [English](./README-EN.md) | [中文文档](./README.md)
 
@@ -219,11 +220,38 @@ MiroFish is an LLM-calling application — the heavy computation is handled by r
 
 > Note: A GPU is only needed if you deploy an LLM locally (e.g., running a local model with Ollama). No GPU is required when using cloud LLM APIs.
 
+## ❓ FAQ
+
+<details>
+<summary><b>What's the difference between Cloud and Local mode?</b></summary>
+
+Cloud mode uses Zep Cloud for memory and knowledge graph storage — easy to set up but data passes through a third-party cloud. Local mode uses Graphiti + Neo4j, keeping all data on-premise. Ideal for privacy-sensitive or air-gapped environments. Switch with the `ZEP_BACKEND` environment variable.
+</details>
+
+<details>
+<summary><b>Neo4j won't start — what do I do?</b></summary>
+
+1. Confirm Docker is installed and running: `docker --version`
+2. Check if ports 7474/7687 are in use: `lsof -i :7474`
+3. Check container logs: `docker-compose -f docker-compose.local.yml logs neo4j`
+4. Try a clean restart: `docker-compose -f docker-compose.local.yml down -v && docker-compose -f docker-compose.local.yml up -d`
+</details>
+
+<details>
+<summary><b>Which LLMs are supported?</b></summary>
+
+Any LLM API compatible with the OpenAI SDK format, including: Alibaba Bailian (qwen-plus/qwen-max), OpenAI (GPT-4o), DeepSeek, local Ollama, and more. Just configure `LLM_BASE_URL` and `LLM_API_KEY`.
+</details>
+
+<details>
+<summary><b>How many tokens does a simulation cost?</b></summary>
+
+It depends on the number of agents and simulation rounds. For your first run, we recommend fewer than 40 rounds, which typically consumes ~500K–1M tokens.
+</details>
+
 ## 🤝 Contributing
 
-We welcome Pull Requests and Issues! Whether it's bug reports, feature suggestions, or documentation improvements, we truly appreciate every contribution from the community.
-
-> Contributing guidelines are being finalized — stay tuned.
+We welcome Pull Requests and Issues! See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ## 📄 Credits & Attribution
 
