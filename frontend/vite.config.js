@@ -1,17 +1,20 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
   server: {
     port: 3000,
-    open: true,
+    host: true,
+    allowedHosts: ['sim.aiskin.pro'],
+    open: false,
     proxy: {
       '/api': {
         target: 'http://localhost:5001',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        timeout: 600000,
+        proxyTimeout: 600000
       }
     }
   }

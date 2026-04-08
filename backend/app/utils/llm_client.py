@@ -84,8 +84,15 @@ class LLMClient:
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
-            response_format={"type": "json_object"}
         )
         
-        return json.loads(response)
+        # Strip markdown code blocks if present
+        text = response.strip()
+        if text.startswith("```"):
+            lines = text.split("\n")
+            # Remove first line (```json) and last line (```)
+            lines = [l for l in lines if not l.strip().startswith("```")]
+            text = "\n".join(lines).strip()
+        
+        return json.loads(text)
 

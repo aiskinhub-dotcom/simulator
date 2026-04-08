@@ -166,20 +166,21 @@ class OasisProfileGenerator:
     
     # 常见国家列表
     COUNTRIES = [
-        "China", "US", "UK", "Japan", "Germany", "France", 
-        "Canada", "Australia", "Brazil", "India", "South Korea"
+        "Indonesia", "Russia", "China", "Australia", "US", "UK", 
+        "Singapore", "Japan", "India", "Germany", "France"
     ]
     
     # 个人类型实体（需要生成具体人设）
     INDIVIDUAL_ENTITY_TYPES = [
-        "student", "alumni", "professor", "person", "publicfigure", 
-        "expert", "faculty", "official", "journalist", "activist"
+        "broker", "investor", "developer_ceo", "property_manager", 
+        "expatriate", "agent", "lawyer", "architect", "official", "person"
     ]
     
     # 群体/机构类型实体（需要生成群体代表人设）
     GROUP_ENTITY_TYPES = [
-        "university", "governmentagency", "organization", "ngo", 
-        "mediaoutlet", "company", "institution", "group", "community"
+        "developer", "agency", "management_company", "bank",
+        "government_agency", "media_outlet", "hotel_chain", 
+        "community", "organization"
     ]
     
     def __init__(

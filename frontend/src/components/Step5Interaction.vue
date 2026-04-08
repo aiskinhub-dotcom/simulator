@@ -8,7 +8,7 @@
           <!-- Report Header -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">Prediction Report</span>
+              <span class="report-tag">Прогнозный отчёт</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -16,7 +16,7 @@
             <div class="header-divider"></div>
           </div>
 
-          <!-- Sections List -->
+          <!-- Разделы List -->
           <div class="sections-list">
             <div 
               v-for="(section, idx) in reportOutline.sections" 
@@ -33,7 +33,7 @@
                 <svg 
                   v-if="isSectionCompleted(idx + 1)" 
                   class="collapse-icon" 
-                  :class="{ 'is-collapsed': collapsedSections.has(idx) }"
+                  :class="{ 'is-collapsed': collapsedРазделы.has(idx) }"
                   viewBox="0 0 24 24" 
                   width="20" 
                   height="20" 
@@ -45,9 +45,9 @@
                 </svg>
               </div>
               
-              <div class="section-body" v-show="!collapsedSections.has(idx)">
+              <div class="section-body" v-show="!collapsedРазделы.has(idx)">
                 <!-- Completed Content -->
-                <div v-if="generatedSections[idx + 1]" class="generated-content" v-html="renderMarkdown(generatedSections[idx + 1])"></div>
+                <div v-if="generatedРазделы[idx + 1]" class="generated-content" v-html="renderMarkdown(generatedРазделы[idx + 1])"></div>
                 
                 <!-- Loading State -->
                 <div v-else-if="currentSectionIndex === idx + 1" class="loading-state">
@@ -57,7 +57,7 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">正在生成{{ section.title }}...</span>
+                  <span class="loading-text">Генерация{{ section.title }}...</span>
                 </div>
               </div>
             </div>
@@ -84,7 +84,7 @@
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
           <div class="action-bar-text">
-            <span class="action-bar-title">Interactive Tools</span>
+            <span class="action-bar-title">Interactive Инструменты</span>
             <span class="action-bar-subtitle mono">{{ profiles.length }} agents available</span>
           </div>
         </div>
@@ -97,7 +97,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
               </svg>
-              <span>与Report Agent对话</span>
+              <span>Чат с Report Agent</span>
             </button>
             <div class="agent-dropdown" v-if="profiles.length > 0">
               <button 
@@ -109,13 +109,13 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span>{{ selectedAgent ? selectedAgent.username : '与世界中任意个体对话' }}</span>
+                <span>{{ selectedAgent ? selectedAgent.username : 'Общение с любым персонажем мира' }}</span>
                 <svg class="dropdown-arrow" :class="{ open: showAgentDropdown }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </button>
               <div v-if="showAgentDropdown" class="dropdown-menu">
-                <div class="dropdown-header">选择对话对象</div>
+                <div class="dropdown-header">Выберите собеседника</div>
                 <div 
                   v-for="(agent, idx) in profiles" 
                   :key="idx"
@@ -125,7 +125,7 @@
                   <div class="agent-avatar">{{ (agent.username || 'A')[0] }}</div>
                   <div class="agent-info">
                     <span class="agent-name">{{ agent.username }}</span>
-                    <span class="agent-role">{{ agent.profession || '未知职业' }}</span>
+                    <span class="agent-role">{{ agent.profession || 'Профессия неизвестна' }}</span>
                   </div>
                 </div>
               </div>
@@ -140,7 +140,7 @@
                 <path d="M9 11l3 3L22 4"></path>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
               </svg>
-              <span>发送问卷调查到世界中</span>
+              <span>Отправить опрос в мир</span>
             </button>
           </div>
         </div>
@@ -148,21 +148,21 @@
         <!-- Chat Mode -->
         <div v-if="activeTab === 'chat'" class="chat-container">
 
-          <!-- Report Agent Tools Card -->
+          <!-- Report Agent Инструменты Card -->
           <div v-if="chatTarget === 'report_agent'" class="report-agent-tools-card">
             <div class="tools-card-header">
               <div class="tools-card-avatar">R</div>
               <div class="tools-card-info">
                 <div class="tools-card-name">Report Agent - Chat</div>
-                <div class="tools-card-subtitle">报告生成智能体的快速对话版本，可调用 4 种专业工具，拥有MiroFish的完整记忆</div>
+                <div class="tools-card-subtitle">Быстрая диалоговая версия агента генерации отчётов. Имеет доступ к 4 профессиональным инструментам и полной памяти MiroFish.</div>
               </div>
-              <button class="tools-card-toggle" @click="showToolsDetail = !showToolsDetail">
-                <svg :class="{ 'is-expanded': showToolsDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <button class="tools-card-toggle" @click="showИнструментыDetail = !showИнструментыDetail">
+                <svg :class="{ 'is-expanded': showИнструментыDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </button>
             </div>
-            <div v-if="showToolsDetail" class="tools-card-body">
+            <div v-if="showИнструментыDetail" class="tools-card-body">
               <div class="tools-grid">
                 <div class="tool-item tool-purple">
                   <div class="tool-icon-wrapper">
@@ -171,8 +171,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InsightForge 深度归因</div>
-                    <div class="tool-desc">对齐现实世界种子数据与模拟环境状态，结合Global/Local Memory机制，提供跨时空的深度归因分析</div>
+                    <div class="tool-name">InsightForge — Глубокая атрибуция</div>
+                    <div class="tool-desc">Сопоставляет данные реальных зёрен с состоянием среды симуляции, используя механизмы Global/Local Memory для кросс-пространственного глубокого анализа атрибуции</div>
                   </div>
                 </div>
                 <div class="tool-item tool-blue">
@@ -183,8 +183,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">PanoramaSearch 全景追踪</div>
-                    <div class="tool-desc">基于图结构的广度遍历算法，重构事件传播路径，捕获全量信息流动的拓扑结构</div>
+                    <div class="tool-name">PanoramaSearch — Полное отслеживание</div>
+                    <div class="tool-desc">Алгоритм обхода графа в ширину, восстанавливающий пути распространения событий и захватывающий полную топологию информационных потоков</div>
                   </div>
                 </div>
                 <div class="tool-item tool-orange">
@@ -194,8 +194,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">QuickSearch 快速检索</div>
-                    <div class="tool-desc">基于 GraphRAG 的即时查询接口，优化索引效率，用于快速提取具体的节点属性与离散事实</div>
+                    <div class="tool-name">QuickSearch — Быстрый поиск</div>
+                    <div class="tool-desc">Интерфейс мгновенных запросов на основе GraphRAG, оптимизированный для быстрого извлечения атрибутов конкретных узлов и дискретных фактов</div>
                   </div>
                 </div>
                 <div class="tool-item tool-green">
@@ -207,8 +207,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InterviewSubAgent 虚拟访谈</div>
-                    <div class="tool-desc">自主式访谈，能够并行与模拟世界中个体进行多轮对话，采集非结构化的观点数据与心理状态</div>
+                    <div class="tool-name">InterviewSubAgent — Виртуальное интервью</div>
+                    <div class="tool-desc">Автономное интервью, ведущее параллельные многораундовые диалоги с персонажами смоделированного мира, собирающее неструктурированные мнения и психологические состояния</div>
                   </div>
                 </div>
               </div>
@@ -223,7 +223,7 @@
                 <div class="profile-card-name">{{ selectedAgent.username }}</div>
                 <div class="profile-card-meta">
                   <span v-if="selectedAgent.name" class="profile-card-handle">@{{ selectedAgent.name }}</span>
-                  <span class="profile-card-profession">{{ selectedAgent.profession || '未知职业' }}</span>
+                  <span class="profile-card-profession">{{ selectedAgent.profession || 'Профессия неизвестна' }}</span>
                 </div>
               </div>
               <button class="profile-card-toggle" @click="showFullProfile = !showFullProfile">
@@ -234,7 +234,7 @@
             </div>
             <div v-if="showFullProfile && selectedAgent.bio" class="profile-card-body">
               <div class="profile-card-bio">
-                <div class="profile-card-label">简介</div>
+                <div class="profile-card-label">Биография</div>
                 <p>{{ selectedAgent.bio }}</p>
               </div>
             </div>
@@ -249,7 +249,7 @@
                 </svg>
               </div>
               <p class="empty-text">
-                {{ chatTarget === 'report_agent' ? '与 Report Agent 对话，深入了解报告内容' : '与模拟个体对话，了解他们的观点' }}
+                {{ chatTarget === 'report_agent' ? 'Общайтесь с Report Agent, чтобы глубже разобраться в содержании отчёта' : 'Общайтесь с персонажем симуляции, чтобы узнать его точку зрения' }}
               </p>
             </div>
             <div 
@@ -291,7 +291,7 @@
             <textarea 
               v-model="chatInput"
               class="chat-input"
-              placeholder="输入您的问题..."
+              placeholder="Введите ваш вопрос..."
               @keydown.enter.exact.prevent="sendMessage"
               :disabled="isSending || (!selectedAgent && chatTarget === 'agent')"
               rows="1"
@@ -316,8 +316,8 @@
           <div class="survey-setup">
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">选择调查对象</span>
-                <span class="selection-count">已选 {{ selectedAgents.size }} / {{ profiles.length }}</span>
+                <span class="section-title">Выбор респондентов</span>
+                <span class="selection-count">Выбрано {{ selectedAgents.size }} / {{ profiles.length }}</span>
               </div>
               <div class="agents-grid">
                 <label 
@@ -334,7 +334,7 @@
                   <div class="checkbox-avatar">{{ (agent.username || 'A')[0] }}</div>
                   <div class="checkbox-info">
                     <span class="checkbox-name">{{ agent.username }}</span>
-                    <span class="checkbox-role">{{ agent.profession || '未知职业' }}</span>
+                    <span class="checkbox-role">{{ agent.profession || 'Профессия неизвестна' }}</span>
                   </div>
                   <div class="checkbox-indicator">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3">
@@ -344,20 +344,20 @@
                 </label>
               </div>
               <div class="selection-actions">
-                <button class="action-link" @click="selectAllAgents">全选</button>
+                <button class="action-link" @click="selectAllAgents">Выбрать всех</button>
                 <span class="action-divider">|</span>
-                <button class="action-link" @click="clearAgentSelection">清空</button>
+                <button class="action-link" @click="clearAgentSelection">Очистить</button>
               </div>
             </div>
 
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">问卷问题</span>
+                <span class="section-title">Вопрос анкеты</span>
               </div>
               <textarea 
                 v-model="surveyQuestion"
                 class="survey-input"
-                placeholder="输入您想问所有被选中对象的问题..."
+                placeholder="Введите вопрос для всех выбранных респондентов..."
                 rows="3"
               ></textarea>
             </div>
@@ -368,15 +368,15 @@
               @click="submitSurvey"
             >
               <span v-if="isSurveying" class="loading-spinner"></span>
-              <span v-else>发送问卷</span>
+              <span v-else>Отправить анкету</span>
             </button>
           </div>
 
           <!-- Survey Results -->
           <div v-if="surveyResults.length > 0" class="survey-results">
             <div class="results-header">
-              <span class="results-title">调查结果</span>
-              <span class="results-count">{{ surveyResults.length }} 条回复</span>
+              <span class="results-title">Результаты опроса</span>
+              <span class="results-count">{{ surveyResults.length }}  ответов</span>
             </div>
             <div class="results-list">
               <div 
@@ -388,7 +388,7 @@
                   <div class="result-avatar">{{ (result.agent_name || 'A')[0] }}</div>
                   <div class="result-info">
                     <span class="result-name">{{ result.agent_name }}</span>
-                    <span class="result-role">{{ result.profession || '未知职业' }}</span>
+                    <span class="result-role">{{ result.profession || 'Профессия неизвестна' }}</span>
                   </div>
                 </div>
                 <div class="result-question">
@@ -428,7 +428,7 @@ const showAgentDropdown = ref(false)
 const selectedAgent = ref(null)
 const selectedAgentIndex = ref(null)
 const showFullProfile = ref(true)
-const showToolsDetail = ref(true)
+const showИнструментыDetail = ref(true)
 
 // Chat State
 const chatInput = ref('')
@@ -446,14 +446,14 @@ const isSurveying = ref(false)
 
 // Report Data
 const reportOutline = ref(null)
-const generatedSections = ref({})
-const collapsedSections = ref(new Set())
+const generatedРазделы = ref({})
+const collapsedРазделы = ref(new Set())
 const currentSectionIndex = ref(null)
 const profiles = ref([])
 
 // Helper Methods
 const isSectionCompleted = (sectionIndex) => {
-  return !!generatedSections.value[sectionIndex]
+  return !!generatedРазделы.value[sectionIndex]
 }
 
 // Refs
@@ -466,14 +466,14 @@ const addLog = (msg) => {
 }
 
 const toggleSectionCollapse = (idx) => {
-  if (!generatedSections.value[idx + 1]) return
-  const newSet = new Set(collapsedSections.value)
+  if (!generatedРазделы.value[idx + 1]) return
+  const newSet = new Set(collapsedРазделы.value)
   if (newSet.has(idx)) {
     newSet.delete(idx)
   } else {
     newSet.add(idx)
   }
-  collapsedSections.value = newSet
+  collapsedРазделы.value = newSet
 }
 
 const selectChatTarget = (target) => {
@@ -534,7 +534,7 @@ const selectAgent = (agent, idx) => {
   
   // 恢复该 Agent 的对话记录
   chatHistory.value = chatHistoryCache.value[`agent_${idx}`] || []
-  addLog(`选择对话对象: ${agent.username}`)
+  addLog(`Выберите собеседника: ${agent.username}`)
 }
 
 const formatTime = (timestamp) => {
@@ -579,10 +579,10 @@ const renderMarkdown = (content) => {
   
   // 清理列表项之间的所有空白
   html = html.replace(/<\/li>\s+<li/g, '</li><li')
-  // 清理列表开始标签后的空白
+  // 清理列表开始Метка后的空白
   html = html.replace(/<ul class="md-ul">\s+/g, '<ul class="md-ul">')
   html = html.replace(/<ol class="md-ol">\s+/g, '<ol class="md-ol">')
-  // 清理列表结束标签前的空白
+  // 清理列表结束Метка前的空白
   html = html.replace(/\s+<\/ul>/g, '</ul>')
   html = html.replace(/\s+<\/ol>/g, '</ol>')
   
@@ -598,12 +598,12 @@ const renderMarkdown = (content) => {
   html = html.replace(/(<\/h[2-5]>)<\/p>/g, '$1')
   html = html.replace(/<p class="md-p">(<ul|<ol|<blockquote|<pre|<hr)/g, '$1')
   html = html.replace(/(<\/ul>|<\/ol>|<\/blockquote>|<\/pre>)<\/p>/g, '$1')
-  // 清理列表前后的 <br> 标签
+  // 清理列表前后的 <br> Метка
   html = html.replace(/<br>\s*(<ul|<ol)/g, '$1')
   html = html.replace(/(<\/ul>|<\/ol>)\s*<br>/g, '$1')
-  // 清理连续的 <br> 标签
+  // 清理连续的 <br> Метка
   html = html.replace(/(<br>\s*){2,}/g, '<br>')
-  // 清理列表后紧跟的段落开始标签前的 <br>
+  // 清理列表后紧跟的段落开始Метка前的 <br>
   html = html.replace(/(<\/ol>|<\/ul>)<br>(<p|<div)/g, '$1$2')
   
   return html
@@ -636,7 +636,7 @@ const sendMessage = async () => {
     addLog(`发送失败: ${err.message}`)
     chatHistory.value.push({
       role: 'assistant',
-      content: `抱歉，发生了错误: ${err.message}`,
+      content: `抱歉，发生了Ошибка: ${err.message}`,
       timestamp: new Date().toISOString()
     })
   } finally {
@@ -679,7 +679,7 @@ const sendToReportAgent = async (message) => {
 
 const sendToAgent = async (message) => {
   if (!selectedAgent.value || selectedAgentIndex.value === null) {
-    throw new Error('请先选择一个模拟个体')
+    throw new Error('请先选择一Симуляция体')
   }
   
   addLog(`向 ${selectedAgent.value.username} 发送: ${message.substring(0, 50)}...`)
@@ -690,7 +690,7 @@ const sendToAgent = async (message) => {
     const historyContext = chatHistory.value
       .filter(msg => msg.content !== message)
       .slice(-6)
-      .map(msg => `${msg.role === 'user' ? '提问者' : '你'}：${msg.content}`)
+      .map(msg => `${msg.role === 'user' ? '提问者' : 'Вы'}：${msg.content}`)
       .join('\n')
     prompt = `以下是我们之前的对话：\n${historyContext}\n\n现在我的新问题是：${message}`
   }
@@ -704,7 +704,7 @@ const sendToAgent = async (message) => {
   })
   
   if (res.success && res.data) {
-    // 正确的数据路径: res.data.result.results 是一个对象字典
+    // 正确的Data路径: res.data.result.results 是一对象字典
     // 格式: {"twitter_0": {...}, "reddit_0": {...}} 或单平台 {"reddit_0": {...}}
     const resultData = res.data.result || res.data
     const resultsDict = resultData.results || resultData
@@ -734,7 +734,7 @@ const sendToAgent = async (message) => {
       })
       addLog(`${selectedAgent.value.username} 已回复`)
     } else {
-      throw new Error('无响应数据')
+      throw new Error('无响应Data')
     }
   } else {
     throw new Error(res.error || '请求失败')
@@ -774,7 +774,7 @@ const submitSurvey = async () => {
   if (selectedAgents.value.size === 0 || !surveyQuestion.value.trim()) return
   
   isSurveying.value = true
-  addLog(`发送问卷给 ${selectedAgents.value.size} 个对象...`)
+  addLog(`Отправить анкету给 ${selectedAgents.value.size} 对象...`)
   
   try {
     const interviews = Array.from(selectedAgents.value).map(idx => ({
@@ -788,7 +788,7 @@ const submitSurvey = async () => {
     })
     
     if (res.success && res.data) {
-      // 正确的数据路径: res.data.result.results 是一个对象字典
+      // 正确的Data路径: res.data.result.results 是一对象字典
       // 格式: {"twitter_0": {...}, "reddit_0": {...}, "twitter_1": {...}, ...}
       const resultData = res.data.result || res.data
       const resultsDict = resultData.results || resultData
@@ -828,7 +828,7 @@ const submitSurvey = async () => {
       }
       
       surveyResults.value = surveyResultsList
-      addLog(`收到 ${surveyResults.value.length} 条回复`)
+      addLog(`收到 ${surveyResults.value.length}  ответов`)
     } else {
       throw new Error(res.error || '请求失败')
     }
@@ -844,7 +844,7 @@ const loadReportData = async () => {
   if (!props.reportId) return
   
   try {
-    addLog(`加载报告数据: ${props.reportId}`)
+    addLog(`Загрузка данных отчёта: ${props.reportId}`)
     
     // Get report info
     const reportRes = await getReport(props.reportId)
@@ -871,11 +871,11 @@ const loadAgentLogs = async () => {
         }
         
         if (log.action === 'section_complete' && log.section_index < 100 && log.details?.content) {
-          generatedSections.value[log.section_index] = log.details.content
+          generatedРазделы.value[log.section_index] = log.details.content
         }
       })
       
-      addLog('报告数据加载完成')
+      addLog('报告Data加载完成')
     }
   } catch (err) {
     addLog(`加载报告日志失败: ${err.message}`)
@@ -889,10 +889,10 @@ const loadProfiles = async () => {
     const res = await getSimulationProfilesRealtime(props.simulationId, 'reddit')
     if (res.success && res.data) {
       profiles.value = res.data.profiles || []
-      addLog(`加载了 ${profiles.value.length} 个模拟个体`)
+      addLog(`加载了 ${profiles.value.length} Симуляция体`)
     }
   } catch (err) {
-    addLog(`加载模拟个体失败: ${err.message}`)
+    addLog(`加载Симуляция体失败: ${err.message}`)
   }
 }
 
@@ -906,7 +906,7 @@ const handleClickOutside = (e) => {
 
 // Lifecycle
 onMounted(() => {
-  addLog('Step5 深度互动初始化')
+  addLog('Step5 Глубокое взаимодействиеИнициализация')
   loadReportData()
   loadProfiles()
   document.addEventListener('click', handleClickOutside)
@@ -1046,7 +1046,7 @@ watch(() => props.simulationId, (newId) => {
   width: 100%;
 }
 
-/* Sections List */
+/* Разделы List */
 .sections-list {
   display: flex;
   flex-direction: column;
@@ -1454,7 +1454,7 @@ watch(() => props.simulationId, (newId) => {
   overflow: hidden;
 }
 
-/* Report Agent Tools Card */
+/* Report Agent Инструменты Card */
 .report-agent-tools-card {
   border-bottom: 1px solid #E5E7EB;
   background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
@@ -1999,7 +1999,7 @@ watch(() => props.simulationId, (newId) => {
   margin-bottom: 0;
 }
 
-/* 修复有序列表编号 - 使用 CSS 计数器让多个 ol 连续编号 */
+/* 修复有序列表编号 - 使用 CSS 计数器让多 ol 连续编号 */
 .message-text {
   counter-reset: list-counter;
 }

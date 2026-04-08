@@ -8,7 +8,7 @@
           <!-- Report Header -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">Prediction Report</span>
+              <span class="report-tag">Прогнозный отчёт</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -16,7 +16,7 @@
             <div class="header-divider"></div>
           </div>
 
-          <!-- Sections List -->
+          <!-- Разделы List -->
           <div class="sections-list">
             <div 
               v-for="(section, idx) in reportOutline.sections" 
@@ -34,7 +34,7 @@
                 <svg 
                   v-if="isSectionCompleted(idx + 1)" 
                   class="collapse-icon" 
-                  :class="{ 'is-collapsed': collapsedSections.has(idx) }"
+                  :class="{ 'is-collapsed': collapsedРазделы.has(idx) }"
                   viewBox="0 0 24 24" 
                   width="20" 
                   height="20" 
@@ -46,9 +46,9 @@
                 </svg>
               </div>
               
-              <div class="section-body" v-show="!collapsedSections.has(idx)">
+              <div class="section-body" v-show="!collapsedРазделы.has(idx)">
                 <!-- Completed Content -->
-                <div v-if="generatedSections[idx + 1]" class="generated-content" v-html="renderMarkdown(generatedSections[idx + 1])"></div>
+                <div v-if="generatedРазделы[idx + 1]" class="generated-content" v-html="renderMarkdown(generatedРазделы[idx + 1])"></div>
                 
                 <!-- Loading State -->
                 <div v-else-if="currentSectionIndex === idx + 1" class="loading-state">
@@ -58,7 +58,7 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">正在生成{{ section.title }}...</span>
+                  <span class="loading-text">Генерация{{ section.title }}...</span>
                 </div>
               </div>
             </div>
@@ -89,15 +89,15 @@
         <div class="workflow-overview" v-if="agentLogs.length > 0 || reportOutline">
           <div class="workflow-metrics">
             <div class="metric">
-              <span class="metric-label">Sections</span>
-              <span class="metric-value mono">{{ completedSections }}/{{ totalSections }}</span>
+              <span class="metric-label">Разделы</span>
+              <span class="metric-value mono">{{ completedРазделы }}/{{ totalРазделы }}</span>
             </div>
             <div class="metric">
-              <span class="metric-label">Elapsed</span>
-              <span class="metric-value mono">{{ formatElapsedTime }}</span>
+              <span class="metric-label">Время</span>
+              <span class="metric-value mono">{{ formatВремяTime }}</span>
             </div>
             <div class="metric">
-              <span class="metric-label">Tools</span>
+              <span class="metric-label">Инструменты</span>
               <span class="metric-value mono">{{ totalToolCalls }}</span>
             </div>
             <div class="metric metric-right">
@@ -127,9 +127,9 @@
             </div>
           </div>
 
-          <!-- Next Step Button - 在完成后显示 -->
+          <!-- Next Step Button - Показывается после завершения -->
           <button v-if="isComplete" class="next-step-btn" @click="goToInteraction">
-            <span>进入深度互动</span>
+            <span>Перейти к глубокому взаимодействию</span>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
@@ -194,7 +194,7 @@
                     </div>
                   </template>
                   
-                  <!-- Section/Subsection Content Generated (内容生成完成，但整个章节可能还没完成) -->
+                  <!-- Section/Subsection Content Generated (内容生成完成，但整章节可能还没完成) -->
                   <template v-if="log.action === 'section_content' || log.action === 'subsection_content'">
                     <div class="section-tag content-ready" :class="{ 'is-subsection': log.action === 'subsection_content' }">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -311,13 +311,13 @@
                     <div class="llm-meta">
                       <span class="meta-tag">Iteration {{ log.details?.iteration }}</span>
                       <span class="meta-tag" :class="{ active: log.details?.has_tool_calls }">
-                        Tools: {{ log.details?.has_tool_calls ? 'Yes' : 'No' }}
+                        Инструменты: {{ log.details?.has_tool_calls ? 'Yes' : 'No' }}
                       </span>
                       <span class="meta-tag" :class="{ active: log.details?.has_final_answer, 'final-answer': log.details?.has_final_answer }">
                         Final: {{ log.details?.has_final_answer ? 'Yes' : 'No' }}
                       </span>
                     </div>
-                    <!-- 当是最终答案时，显示特殊提示 -->
+                    <!-- 当是最终答案时，显示特殊Hint -->
                     <div v-if="log.details?.has_final_answer" class="final-answer-hint">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"></polyline>
@@ -341,7 +341,7 @@
                   </template>
                 </div>
 
-                <!-- Footer: Elapsed Time + Action Buttons -->
+                <!-- Footer: Время Time + Action Buttons -->
                 <div class="timeline-footer" v-if="log.elapsed_seconds || (log.action === 'tool_call' && log.details?.parameters) || log.action === 'tool_result' || (log.action === 'llm_response' && log.details?.response)">
                   <span v-if="log.elapsed_seconds" class="elapsed-badge">+{{ log.elapsed_seconds.toFixed(1) }}s</span>
                   <span v-else class="elapsed-placeholder"></span>
@@ -420,10 +420,10 @@ const agentLogLine = ref(0)
 const consoleLogLine = ref(0)
 const reportOutline = ref(null)
 const currentSectionIndex = ref(null)
-const generatedSections = ref({})
+const generatedРазделы = ref({})
 const expandedContent = ref(new Set())
 const expandedLogs = ref(new Set())
-const collapsedSections = ref(new Set())
+const collapsedРазделы = ref(new Set())
 const isComplete = ref(false)
 const startTime = ref(null)
 const leftPanel = ref(null)
@@ -441,7 +441,7 @@ const toggleRawResult = (timestamp, event) => {
   // 切换状态
   showRawResult[timestamp] = !showRawResult[timestamp]
   
-  // 等待 DOM 更新后，调整滚动位置以保持按钮在相同位置
+  // Ожидание DOM 更新后，调整滚动位置以保持按钮在相同位置
   if (button && buttonTopBeforeToggle !== undefined && rightPanel.value) {
     nextTick(() => {
       const newButtonRect = button.getBoundingClientRect()
@@ -455,7 +455,7 @@ const toggleRawResult = (timestamp, event) => {
 }
 
 const toggleSectionContent = (idx) => {
-  if (!generatedSections.value[idx + 1]) return
+  if (!generatedРазделы.value[idx + 1]) return
   const newSet = new Set(expandedContent.value)
   if (newSet.has(idx)) {
     newSet.delete(idx)
@@ -466,15 +466,15 @@ const toggleSectionContent = (idx) => {
 }
 
 const toggleSectionCollapse = (idx) => {
-  // 只有已完成的章节才能折叠
-  if (!generatedSections.value[idx + 1]) return
-  const newSet = new Set(collapsedSections.value)
+  // 只有Завершено的章节才能折叠
+  if (!generatedРазделы.value[idx + 1]) return
+  const newSet = new Set(collapsedРазделы.value)
   if (newSet.has(idx)) {
     newSet.delete(idx)
   } else {
     newSet.add(idx)
   }
-  collapsedSections.value = newSet
+  collapsedРазделы.value = newSet
 }
 
 const toggleLogExpand = (log) => {
@@ -524,7 +524,7 @@ const toolConfig = {
   'get_entities_by_type': {
     name: 'Entity Query',
     color: 'pink',
-    icon: 'database' // 数据库图标 - 代表实体
+    icon: 'database' // Data库图标 - 代表实体
   }
 }
 
@@ -561,10 +561,10 @@ const parseInsightForge = (text) => {
     const reqMatch = text.match(/预测场景:\s*(.+?)(?:\n|$)/)
     if (reqMatch) result.simulationRequirement = reqMatch[1].trim()
     
-    // 提取统计数据 - 匹配"相关预测事实: X条"格式
-    const factMatch = text.match(/相关预测事实:\s*(\d+)/)
+    // 提取统计Data - 匹配"相关预测Факт: Xэлементов"格式
+    const factMatch = text.match(/相关预测Факт:\s*(\d+)/)
     const entityMatch = text.match(/涉及实体:\s*(\d+)/)
-    const relMatch = text.match(/关系链:\s*(\d+)/)
+    const relMatch = text.match(/Связь链:\s*(\d+)/)
     if (factMatch) result.stats.facts = parseInt(factMatch[1])
     if (entityMatch) result.stats.entities = parseInt(entityMatch[1])
     if (relMatch) result.stats.relationships = parseInt(relMatch[1])
@@ -594,8 +594,8 @@ const parseInsightForge = (text) => {
       const entityBlocks = entityText.split(/\n(?=- \*\*)/).filter(b => b.trim().startsWith('- **'))
       result.entities = entityBlocks.map(block => {
         const nameMatch = block.match(/^-\s*\*\*(.+?)\*\*\s*\((.+?)\)/)
-        const summaryMatch = block.match(/摘要:\s*"?(.+?)"?(?:\n|$)/)
-        const relatedMatch = block.match(/相关事实:\s*(\d+)/)
+        const summaryMatch = block.match(/Описание:\s*"?(.+?)"?(?:\n|$)/)
+        const relatedMatch = block.match(/相关Факт:\s*(\d+)/)
         return {
           name: nameMatch ? nameMatch[1].trim() : '',
           type: nameMatch ? nameMatch[2].trim() : '',
@@ -605,8 +605,8 @@ const parseInsightForge = (text) => {
       }).filter(e => e.name)
     }
     
-    // 提取关系链 - 完整提取，不限制数量
-    const relSection = text.match(/### 【关系链】\n([\s\S]*?)(?=\n###|$)/)
+    // 提取Связь链 - 完整提取，不限制数量
+    const relSection = text.match(/### 【Связь链】\n([\s\S]*?)(?=\n###|$)/)
     if (relSection) {
       const lines = relSection[1].split('\n').filter(l => l.trim().startsWith('-'))
       result.relations = lines.map(l => {
@@ -638,11 +638,11 @@ const parsePanorama = (text) => {
     const queryMatch = text.match(/查询:\s*(.+?)(?:\n|$)/)
     if (queryMatch) result.query = queryMatch[1].trim()
     
-    // 提取统计数据
-    const nodesMatch = text.match(/总节点数:\s*(\d+)/)
+    // 提取统计Data
+    const nodesMatch = text.match(/总узлов数:\s*(\d+)/)
     const edgesMatch = text.match(/总边数:\s*(\d+)/)
-    const activeMatch = text.match(/当前有效事实:\s*(\d+)/)
-    const histMatch = text.match(/历史\/过期事实:\s*(\d+)/)
+    const activeMatch = text.match(/当前有效Факт:\s*(\d+)/)
+    const histMatch = text.match(/历史\/过期Факт:\s*(\d+)/)
     if (nodesMatch) result.stats.nodes = parseInt(nodesMatch[1])
     if (edgesMatch) result.stats.edges = parseInt(edgesMatch[1])
     if (activeMatch) result.stats.activeFacts = parseInt(activeMatch[1])
@@ -702,7 +702,7 @@ const parseInterview = (text) => {
     const topicMatch = text.match(/\*\*采访主题:\*\*\s*(.+?)(?:\n|$)/)
     if (topicMatch) result.topic = topicMatch[1].trim()
     
-    // 提取采访人数（如 "5 / 9 位模拟Agent"）
+    // 提取采访人数（如 "5 / 9 位СимуляцияAgent"）
     const countMatch = text.match(/\*\*采访人数:\*\*\s*(\d+)\s*\/\s*(\d+)/)
     if (countMatch) {
       result.successCount = parseInt(countMatch[1])
@@ -716,7 +716,7 @@ const parseInterview = (text) => {
       result.selectionReason = reasonMatch[1].trim()
     }
     
-    // 解析每个人的选择理由
+    // 解析每人的选择理由
     const parseIndividualReasons = (reasonText) => {
       const reasons = {}
       if (!reasonText) return reasons
@@ -759,7 +759,7 @@ const parseInterview = (text) => {
         }
         
         if (name) {
-          // 保存上一个人的理由
+          // 保存上一人的理由
           if (currentName && currentReason.length > 0) {
             reasons[currentName] = currentReason.join(' ').trim()
           }
@@ -772,7 +772,7 @@ const parseInterview = (text) => {
         }
       }
       
-      // 保存最后一个人的理由
+      // 保存最后一人的理由
       if (currentName && currentReason.length > 0) {
         reasons[currentName] = currentReason.join(' ').trim()
       }
@@ -782,7 +782,7 @@ const parseInterview = (text) => {
     
     const individualReasons = parseIndividualReasons(result.selectionReason)
     
-    // 提取每个采访记录
+    // 提取每采访记录
     const interviewBlocks = text.split(/#### 采访 #\d+:/).slice(1)
     
     interviewBlocks.forEach((block, index) => {
@@ -812,8 +812,8 @@ const parseInterview = (text) => {
         interview.selectionReason = individualReasons[interview.name] || ''
       }
       
-      // 提取简介
-      const bioMatch = block.match(/_简介:\s*([\s\S]*?)_\n/)
+      // 提取Биография
+      const bioMatch = block.match(/_Биография:\s*([\s\S]*?)_\n/)
       if (bioMatch) {
         interview.bio = bioMatch[1].trim().replace(/\.\.\.$/, '...')
       }
@@ -825,7 +825,7 @@ const parseInterview = (text) => {
         // 按数字编号分割问题
         const questions = qText.split(/\n\d+\.\s+/).filter(q => q.trim())
         if (questions.length > 0) {
-          // 如果第一个问题前面有"1."，需要特殊处理
+          // 如果第一问题前面有"1."，需要特殊处理
           const firstQ = qText.match(/^1\.\s+(.+)/)
           if (firstQ) {
             interview.questions = [firstQ[1].trim(), ...questions.slice(1).map(q => q.trim())]
@@ -851,8 +851,8 @@ const parseInterview = (text) => {
           interview.redditAnswer = redditMatch[1].trim()
         }
         
-        // 如果只有一个平台的回答，将其作为主回答
-        // 这样无论显示哪个平台都能有内容
+        // 如果只有一平台的回答，将其作为主回答
+        // 这样无论显示哪平台都能有内容
         if (!twitterMatch && redditMatch) {
           // 只有 Reddit 回答，将其也设为 twitterAnswer 作为默认显示
           interview.twitterAnswer = interview.redditAnswer
@@ -907,11 +907,11 @@ const parseQuickSearch = (text) => {
     if (queryMatch) result.query = queryMatch[1].trim()
     
     // 提取结果数量
-    const countMatch = text.match(/找到\s*(\d+)\s*条/)
+    const countMatch = text.match(/找到\s*(\d+)\s*элементов/)
     if (countMatch) result.count = parseInt(countMatch[1])
     
     // 提取相关事实 - 完整提取，不限制数量
-    const factsSection = text.match(/### 相关事实:\n([\s\S]*)$/)
+    const factsSection = text.match(/### 相关Факт:\n([\s\S]*)$/)
     if (factsSection) {
       const lines = factsSection[1].split('\n').filter(l => l.match(/^\d+\./))
       result.facts = lines.map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean)
@@ -930,8 +930,8 @@ const parseQuickSearch = (text) => {
       }).filter(Boolean)
     }
     
-    // 尝试提取节点信息（如果有）
-    const nodesSection = text.match(/### 相关节点:\n([\s\S]*?)(?=\n###|$)/)
+    // 尝试提取узлов信息（如果有）
+    const nodesSection = text.match(/### 相关узлов:\n([\s\S]*?)(?=\n###|$)/)
     if (nodesSection) {
       const lines = nodesSection[1].split('\n').filter(l => l.trim().startsWith('-'))
       result.nodes = lines.map(l => {
@@ -1019,7 +1019,7 @@ const InsightDisplay = {
           class: ['insight-tab', { active: activeTab.value === 'relations' }],
           onClick: () => { activeTab.value = 'relations' }
         }, [
-          h('span', { class: 'tab-label' }, `关系链 (${props.result.relations.length})`)
+          h('span', { class: 'tab-label' }, `Связь链 (${props.result.relations.length})`)
         ]),
         props.result.subQueries.length > 0 && h('button', {
           class: ['insight-tab', { active: activeTab.value === 'subqueries' }],
@@ -1035,7 +1035,7 @@ const InsightDisplay = {
         activeTab.value === 'facts' && props.result.facts.length > 0 && h('div', { class: 'facts-panel' }, [
           h('div', { class: 'panel-header' }, [
             h('span', { class: 'panel-title' }, '时序记忆中所关联的最新关键事实'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.facts.length} 条`)
+            h('span', { class: 'panel-count' }, `共 ${props.result.facts.length} элементов`)
           ]),
           h('div', { class: 'facts-list' },
             (expandedFacts.value ? props.result.facts : props.result.facts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) => 
@@ -1048,35 +1048,35 @@ const InsightDisplay = {
           props.result.facts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedFacts.value = !expandedFacts.value }
-          }, expandedFacts.value ? `收起 ▲` : `展开全部 ${props.result.facts.length} 条 ▼`)
+          }, expandedFacts.value ? `收起 ▲` : `展开全部 ${props.result.facts.length} элементов ▼`)
         ]),
         
         // Entities Tab
         activeTab.value === 'entities' && props.result.entities.length > 0 && h('div', { class: 'entities-panel' }, [
           h('div', { class: 'panel-header' }, [
             h('span', { class: 'panel-title' }, '核心实体'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.entities.length} 个`)
+            h('span', { class: 'panel-count' }, `共 ${props.result.entities.length} `)
           ]),
           h('div', { class: 'entities-grid' },
             (expandedEntities.value ? props.result.entities : props.result.entities.slice(0, 12)).map((entity, i) => 
               h('div', { class: 'entity-tag', key: i, title: entity.summary || '' }, [
                 h('span', { class: 'entity-name' }, entity.name),
                 h('span', { class: 'entity-type' }, entity.type),
-                entity.relatedFactsCount > 0 && h('span', { class: 'entity-fact-count' }, `${entity.relatedFactsCount}条`)
+                entity.relatedFactsCount > 0 && h('span', { class: 'entity-fact-count' }, `${entity.relatedFactsCount}элементов`)
               ])
             )
           ),
           props.result.entities.length > 12 && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedEntities.value = !expandedEntities.value }
-          }, expandedEntities.value ? `收起 ▲` : `展开全部 ${props.result.entities.length} 个 ▼`)
+          }, expandedEntities.value ? `收起 ▲` : `展开全部 ${props.result.entities.length}  ▼`)
         ]),
         
         // Relations Tab
         activeTab.value === 'relations' && props.result.relations.length > 0 && h('div', { class: 'relations-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, '关系链'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.relations.length} 条`)
+            h('span', { class: 'panel-title' }, 'Связь链'),
+            h('span', { class: 'panel-count' }, `共 ${props.result.relations.length} элементов`)
           ]),
           h('div', { class: 'relations-list' },
             (expandedRelations.value ? props.result.relations : props.result.relations.slice(0, INITIAL_SHOW_COUNT)).map((rel, i) => 
@@ -1094,14 +1094,14 @@ const InsightDisplay = {
           props.result.relations.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedRelations.value = !expandedRelations.value }
-          }, expandedRelations.value ? `收起 ▲` : `展开全部 ${props.result.relations.length} 条 ▼`)
+          }, expandedRelations.value ? `收起 ▲` : `展开全部 ${props.result.relations.length} элементов ▼`)
         ]),
         
         // Sub-queries Tab
         activeTab.value === 'subqueries' && props.result.subQueries.length > 0 && h('div', { class: 'subqueries-panel' }, [
           h('div', { class: 'panel-header' }, [
             h('span', { class: 'panel-title' }, '漂移查询生成分析子问题'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.subQueries.length} 个`)
+            h('span', { class: 'panel-count' }, `共 ${props.result.subQueries.length} `)
           ]),
           h('div', { class: 'subqueries-list' },
             props.result.subQueries.map((sq, i) => 
@@ -1116,7 +1116,7 @@ const InsightDisplay = {
         // Empty state
         activeTab.value === 'facts' && props.result.facts.length === 0 && h('div', { class: 'empty-state' }, '暂无当前关键记忆'),
         activeTab.value === 'entities' && props.result.entities.length === 0 && h('div', { class: 'empty-state' }, '暂无核心实体'),
-        activeTab.value === 'relations' && props.result.relations.length === 0 && h('div', { class: 'empty-state' }, '暂无关系链')
+        activeTab.value === 'relations' && props.result.relations.length === 0 && h('div', { class: 'empty-state' }, '暂无Связь链')
       ])
     ])
   }
@@ -1191,7 +1191,7 @@ const PanoramaDisplay = {
         activeTab.value === 'active' && h('div', { class: 'facts-panel active-facts' }, [
           h('div', { class: 'panel-header' }, [
             h('span', { class: 'panel-title' }, '当前有效记忆'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.activeFacts.length} 条`)
+            h('span', { class: 'panel-count' }, `共 ${props.result.activeFacts.length} элементов`)
           ]),
           props.result.activeFacts.length > 0 ? h('div', { class: 'facts-list' },
             (expandedActive.value ? props.result.activeFacts : props.result.activeFacts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) => 
@@ -1204,14 +1204,14 @@ const PanoramaDisplay = {
           props.result.activeFacts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedActive.value = !expandedActive.value }
-          }, expandedActive.value ? `收起 ▲` : `展开全部 ${props.result.activeFacts.length} 条 ▼`)
+          }, expandedActive.value ? `收起 ▲` : `展开全部 ${props.result.activeFacts.length} элементов ▼`)
         ]),
         
         // Historical Facts Tab
         activeTab.value === 'historical' && h('div', { class: 'facts-panel historical-facts' }, [
           h('div', { class: 'panel-header' }, [
             h('span', { class: 'panel-title' }, '历史记忆'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.historicalFacts.length} 条`)
+            h('span', { class: 'panel-count' }, `共 ${props.result.historicalFacts.length} элементов`)
           ]),
           props.result.historicalFacts.length > 0 ? h('div', { class: 'facts-list' },
             (expandedHistorical.value ? props.result.historicalFacts : props.result.historicalFacts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) => 
@@ -1236,14 +1236,14 @@ const PanoramaDisplay = {
           props.result.historicalFacts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedHistorical.value = !expandedHistorical.value }
-          }, expandedHistorical.value ? `收起 ▲` : `展开全部 ${props.result.historicalFacts.length} 条 ▼`)
+          }, expandedHistorical.value ? `收起 ▲` : `展开全部 ${props.result.historicalFacts.length} элементов ▼`)
         ]),
         
         // Entities Tab
         activeTab.value === 'entities' && h('div', { class: 'entities-panel' }, [
           h('div', { class: 'panel-header' }, [
             h('span', { class: 'panel-title' }, '涉及实体'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.entities.length} 个`)
+            h('span', { class: 'panel-count' }, `共 ${props.result.entities.length} `)
           ]),
           props.result.entities.length > 0 ? h('div', { class: 'entities-grid' },
             (expandedEntities.value ? props.result.entities : props.result.entities.slice(0, 8)).map((entity, i) => 
@@ -1256,7 +1256,7 @@ const PanoramaDisplay = {
           props.result.entities.length > 8 && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedEntities.value = !expandedEntities.value }
-          }, expandedEntities.value ? `收起 ▲` : `展开全部 ${props.result.entities.length} 个 ▼`)
+          }, expandedEntities.value ? `收起 ▲` : `展开全部 ${props.result.entities.length}  ▼`)
         ])
       ])
     ])
@@ -1285,16 +1285,16 @@ const InterviewDisplay = {
     
     const activeIndex = ref(0)
     const expandedAnswers = ref(new Set())
-    // 为每个问题-回答对维护独立的平台选择状态
+    // 为每问题-回答对维护独立的平台选择状态
     const platformTabs = reactive({}) // { 'agentIdx-qIdx': 'twitter' | 'reddit' }
     
-    // 获取某个问题的当前平台选择
+    // 获取某问题的当前平台选择
     const getPlatformTab = (agentIdx, qIdx) => {
       const key = `${agentIdx}-${qIdx}`
       return platformTabs[key] || 'twitter'
     }
     
-    // 设置某个问题的平台选择
+    // 设置某问题的平台选择
     const setPlatformTab = (agentIdx, qIdx, platform) => {
       const key = `${agentIdx}-${qIdx}`
       platformTabs[key] = platform
@@ -1337,7 +1337,7 @@ const InterviewDisplay = {
         })
       }
       
-      // 如果没有找到编号或只找到一个，返回整体
+      // 如果没有找到编号或只找到一，返回整体
       if (matches.length <= 1) {
         // 尝试移除开头的编号（格式：1.  \n 或 1. ）
         const cleaned = answerText.replace(/^\d+\.\s+/, '').trim()
@@ -1367,7 +1367,7 @@ const InterviewDisplay = {
       return [answerText]
     }
     
-    // 获取某个问题对应的回答
+    // 获取某问题对应的回答
     const getAnswerForQuestion = (interview, qIdx, platform) => {
       const answer = platform === 'twitter' ? interview.twitterAnswer : (interview.redditAnswer || interview.twitterAnswer)
       if (!answer) return ''
@@ -1375,7 +1375,7 @@ const InterviewDisplay = {
       const questionCount = interview.questions?.length || 1
       const answers = splitAnswerByQuestions(answer, questionCount)
       
-      // 如果只有一个回答部分，或者索引超出，返回完整回答
+      // 如果只有一回答部分，或者索引超出，返回完整回答
       if (answers.length === 1 || qIdx >= answers.length) {
         return qIdx === 0 ? answer : ''
       }
@@ -1383,7 +1383,7 @@ const InterviewDisplay = {
       return answers[qIdx] || ''
     }
     
-    // 检查某个问题是否有双平台回答
+    // 检查某问题是否有双平台回答
     const hasMultiplePlatforms = (interview, qIdx) => {
       if (!interview.twitterAnswer || !interview.redditAnswer) return false
       const twitterAnswer = getAnswerForQuestion(interview, qIdx, 'twitter')
@@ -1596,13 +1596,13 @@ const QuickSearchDisplay = {
           class: ['quicksearch-tab', { active: activeTab.value === 'edges' }],
           onClick: () => { activeTab.value = 'edges' }
         }, [
-          h('span', { class: 'tab-label' }, `关系 (${props.result.edges.length})`)
+          h('span', { class: 'tab-label' }, `Связь (${props.result.edges.length})`)
         ]),
         hasNodes.value && h('button', {
           class: ['quicksearch-tab', { active: activeTab.value === 'nodes' }],
           onClick: () => { activeTab.value = 'nodes' }
         }, [
-          h('span', { class: 'tab-label' }, `节点 (${props.result.nodes.length})`)
+          h('span', { class: 'tab-label' }, `узлов (${props.result.nodes.length})`)
         ])
       ]),
       
@@ -1612,7 +1612,7 @@ const QuickSearchDisplay = {
         ((!showTabs.value) || activeTab.value === 'facts') && h('div', { class: 'facts-panel' }, [
           !showTabs.value && h('div', { class: 'panel-header' }, [
             h('span', { class: 'panel-title' }, '搜索结果'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.facts.length} 条`)
+            h('span', { class: 'panel-count' }, `共 ${props.result.facts.length} элементов`)
           ]),
           props.result.facts.length > 0 ? h('div', { class: 'facts-list' },
             (expandedFacts.value ? props.result.facts : props.result.facts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) => 
@@ -1625,14 +1625,14 @@ const QuickSearchDisplay = {
           props.result.facts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedFacts.value = !expandedFacts.value }
-          }, expandedFacts.value ? `收起 ▲` : `展开全部 ${props.result.facts.length} 条 ▼`)
+          }, expandedFacts.value ? `收起 ▲` : `展开全部 ${props.result.facts.length} элементов ▼`)
         ]),
         
         // Edges Tab
         activeTab.value === 'edges' && hasEdges.value && h('div', { class: 'edges-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, '相关关系'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.edges.length} 条`)
+            h('span', { class: 'panel-title' }, '相关Связь'),
+            h('span', { class: 'panel-count' }, `共 ${props.result.edges.length} элементов`)
           ]),
           h('div', { class: 'edges-list' },
             props.result.edges.map((edge, i) => 
@@ -1652,8 +1652,8 @@ const QuickSearchDisplay = {
         // Nodes Tab
         activeTab.value === 'nodes' && hasNodes.value && h('div', { class: 'nodes-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, '相关节点'),
-            h('span', { class: 'panel-count' }, `共 ${props.result.nodes.length} 个`)
+            h('span', { class: 'panel-title' }, '相关узлов'),
+            h('span', { class: 'panel-count' }, `共 ${props.result.nodes.length} `)
           ]),
           h('div', { class: 'nodes-grid' },
             props.result.nodes.map((node, i) => 
@@ -1682,24 +1682,24 @@ const statusText = computed(() => {
   return 'Waiting'
 })
 
-const totalSections = computed(() => {
+const totalРазделы = computed(() => {
   return reportOutline.value?.sections?.length || 0
 })
 
-const completedSections = computed(() => {
-  return Object.keys(generatedSections.value).length
+const completedРазделы = computed(() => {
+  return Object.keys(generatedРазделы.value).length
 })
 
 const progressPercent = computed(() => {
-  if (totalSections.value === 0) return 0
-  return Math.round((completedSections.value / totalSections.value) * 100)
+  if (totalРазделы.value === 0) return 0
+  return Math.round((completedРазделы.value / totalРазделы.value) * 100)
 })
 
 const totalToolCalls = computed(() => {
   return agentLogs.value.filter(l => l.action === 'tool_call').length
 })
 
-const formatElapsedTime = computed(() => {
+const formatВремяTime = computed(() => {
   if (!startTime.value) return '0s'
   const lastLog = agentLogs.value[agentLogs.value.length - 1]
   const elapsed = lastLog?.elapsed_seconds || 0
@@ -1717,7 +1717,7 @@ const displayLogs = computed(() => {
 const activeSectionIndex = computed(() => {
   if (isComplete.value) return null
   if (currentSectionIndex.value) return currentSectionIndex.value
-  if (totalSections.value > 0 && completedSections.value < totalSections.value) return completedSections.value + 1
+  if (totalРазделы.value > 0 && completedРазделы.value < totalРазделы.value) return completedРазделы.value + 1
   return null
 })
 
@@ -1730,7 +1730,7 @@ const isPlanningStarted = computed(() => {
 })
 
 const isFinalizing = computed(() => {
-  return !isComplete.value && isPlanningDone.value && totalSections.value > 0 && completedSections.value >= totalSections.value
+  return !isComplete.value && isPlanningDone.value && totalРазделы.value > 0 && completedРазделы.value >= totalРазделы.value
 })
 
 // 当前活跃的步骤（用于顶部显示）
@@ -1740,12 +1740,12 @@ const activeStep = computed(() => {
   const active = steps.find(s => s.status === 'active')
   if (active) return active
   
-  // 如果没有 active，返回最后一个 done 的步骤
+  // 如果没有 active，返回最后一 done 的步骤
   const doneSteps = steps.filter(s => s.status === 'done')
   if (doneSteps.length > 0) return doneSteps[doneSteps.length - 1]
   
-  // 否则返回第一个步骤
-  return steps[0] || { noLabel: '--', title: '等待开始', status: 'todo', meta: '' }
+  // 否则返回第一步骤
+  return steps[0] || { noLabel: '--', title: 'Ожидание开始', status: 'todo', meta: '' }
 })
 
 const workflowSteps = computed(() => {
@@ -1761,11 +1761,11 @@ const workflowSteps = computed(() => {
     meta: planningStatus === 'active' ? 'IN PROGRESS' : ''
   })
 
-  // Sections (if outline exists)
+  // Разделы (if outline exists)
   const sections = reportOutline.value?.sections || []
   sections.forEach((section, i) => {
     const idx = i + 1
-    const status = (isComplete.value || !!generatedSections.value[idx])
+    const status = (isComplete.value || !!generatedРазделы.value[idx])
       ? 'done'
       : (activeSectionIndex.value === idx ? 'active' : 'todo')
 
@@ -1797,7 +1797,7 @@ const addLog = (msg) => {
 }
 
 const isSectionCompleted = (sectionIndex) => {
-  return !!generatedSections.value[sectionIndex]
+  return !!generatedРазделы.value[sectionIndex]
 }
 
 // 从 section_index 获取主章节索引
@@ -1940,7 +1940,7 @@ const getActionLabel = (action) => {
 }
 
 const getLogLevelClass = (log) => {
-  if (log.includes('ERROR') || log.includes('错误')) return 'error'
+  if (log.includes('ERROR') || log.includes('Ошибка')) return 'error'
   if (log.includes('WARNING') || log.includes('警告')) return 'warning'
   // INFO 使用默认颜色，不标记为 success
   return ''
@@ -1974,8 +1974,8 @@ const fetchAgentLog = async () => {
             currentSectionIndex.value = mainIndex
           }
           
-          // section_content / subsection_content - 表示内容生成完成（但整个章节可能还没完成）
-          // 这里不更新 generatedSections，只记录进度
+          // section_content / subsection_content - 表示内容生成完成（但整章节可能还没完成）
+          // 这里不更新 generatedРазделы，只记录Progress
           if (log.action === 'section_content' || log.action === 'subsection_content') {
             // 子章节内容生成时，保持主章节的 loading 状态
             // 因为完整内容会在 section_complete 时一次性提供
@@ -1988,7 +1988,7 @@ const fetchAgentLog = async () => {
             const mainIndex = getMainSectionIndex(log.section_index)
             // 只有主章节完成时（section_index < 100）才更新内容和清除 loading
             if (!isSubsection(log.section_index) && log.details?.content) {
-              generatedSections.value[mainIndex] = log.details.content
+              generatedРазделы.value[mainIndex] = log.details.content
               // 自动展开刚生成的章节
               expandedContent.value.add(mainIndex - 1)
               currentSectionIndex.value = null
@@ -2001,7 +2001,7 @@ const fetchAgentLog = async () => {
             currentSectionIndex.value = null  // 确保清除 loading 状态
             emit('update-status', 'completed')
             stopPolling()
-            // 滚动逻辑统一在循环结束后的 nextTick 中处理
+            // 滚动逻辑统一在循环After completion nextTick 中处理
           }
           
           if (log.action === 'report_start') {
@@ -2013,7 +2013,7 @@ const fetchAgentLog = async () => {
         
         nextTick(() => {
           if (rightPanel.value) {
-            // 如果任务已完成，滚动到顶部；否则滚动到底部跟随最新日志
+            // 如果任务Завершено，滚动到顶部；否则滚动到底部跟随最新日志
             if (isComplete.value) {
               rightPanel.value.scrollTop = 0
             } else {
@@ -2032,7 +2032,7 @@ const fetchAgentLog = async () => {
 const extractFinalContent = (response) => {
   if (!response) return null
   
-  // 尝试提取 <final_answer> 标签内的内容
+  // 尝试提取 <final_answer> Метка内的内容
   const finalAnswerTagMatch = response.match(/<final_answer>([\s\S]*?)<\/final_answer>/)
   if (finalAnswerTagMatch) {
     return finalAnswerTagMatch[1].trim()
@@ -2139,10 +2139,10 @@ watch(() => props.reportId, (newId) => {
     consoleLogLine.value = 0
     reportOutline.value = null
     currentSectionIndex.value = null
-    generatedSections.value = {}
+    generatedРазделы.value = {}
     expandedContent.value = new Set()
     expandedLogs.value = new Set()
-    collapsedSections.value = new Set()
+    collapsedРазделы.value = new Set()
     isComplete.value = false
     startTime.value = null
     
@@ -2359,7 +2359,7 @@ watch(() => props.reportId, (newId) => {
   width: 100%;
 }
 
-/* Sections List */
+/* Разделы List */
 .sections-list {
   display: flex;
   flex-direction: column;

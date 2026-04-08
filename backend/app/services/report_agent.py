@@ -835,7 +835,7 @@ class ReportAgent:
             progress_callback("planning", 30, "正在生成报告大纲...")
         
         # 构建规划prompt
-        system_prompt = """你是一个「未来预测报告」的撰写专家，拥有对模拟世界的「上帝视角」——你可以洞察模拟中每一位Agent的行为、言论和互动。
+        system_prompt = """You are a real estate market research analyst with a god-eye view of the simulated market. You observe every participant actions, statements, and interactions.
 
 【核心理念】
 我们构建了一个模拟世界，并向其中注入了特定的「模拟需求」作为变量。模拟世界的演化结果，就是对未来可能发生情况的预测。你正在观察的不是"实验数据"，而是"未来的预演"。
@@ -990,7 +990,7 @@ class ReportAgent:
         sub_heading_level = 3  # 子标题使用三级（###）
         sub_sub_heading_level = 4  # 更小的子标题使用四级（####）
         
-        system_prompt = f"""你是一个「未来预测报告」的撰写专家，正在撰写报告的一个章节。
+        system_prompt = f"""You are a real estate market research analyst writing a section of an analytical report.
 
 报告标题: {outline.title}
 报告摘要: {outline.summary}
@@ -1669,7 +1669,7 @@ class ReportAgent:
             logger.warning(f"获取报告内容失败: {e}")
         
         # 构建系统提示
-        system_prompt = f"""你是一个简洁高效的模拟预测助手。
+        system_prompt = f"""You are a concise real estate market simulation analyst.
 
 【背景】
 预测条件: {self.simulation_requirement}

@@ -25,7 +25,7 @@ from .zep_entity_reader import EntityNode, ZepEntityReader
 logger = get_logger('mirofish.simulation_config')
 
 # 中国作息时间配置（北京时间）
-CHINA_TIMEZONE_CONFIG = {
+BALI_TIMEZONE_CONFIG = {
     # 深夜时段（几乎无人活动）
     "dead_hours": [0, 1, 2, 3, 4, 5],
     # 早间时段（逐渐醒来）
